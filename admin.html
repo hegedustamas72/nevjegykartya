@@ -22,8 +22,8 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const supabase = createClient(
-  "https://YOUR_PROJECT.supabase.co",
-  "YOUR_ANON_KEY"
+  "https://lvscrtgxcyabjftbsdmm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
 );
 
 const app = document.getElementById("app");
@@ -36,7 +36,7 @@ async function uploadFile(file, path) {
 
   if (error) throw error;
 
-  return `https://YOUR_PROJECT.supabase.co/storage/v1/object/public/assets/${path}`;
+  return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
 }
 
 // 🔤 slug generálás
