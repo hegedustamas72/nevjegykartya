@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NFC Névjegy Admin</title>
+
+  <style>
+    body { font-family: Arial; text-align:center; padding:40px; background:#f0f0f0; }
+    .card { background:#fff; padding:30px; border-radius:15px; max-width:500px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
+    input { width: 90%; padding:10px; margin:8px 0; font-size:15px; border-radius:8px; border:1px solid #ccc; }
+    button { padding:14px 22px; font-size:16px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; margin-top:10px; }
+    .logout { background:#ef5350; }
+    .copyBtn { background:#4caf50; }
+  </style>
+</head>
+
+<body>
+<div id="app">Betöltés...</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const supabase = createClient(
+  "https://lvscrtgxcyabjftbsdmm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
+);
+
+const app = document.getElementById("app");
+
+// 📁 FILE UPLOAD
+async function uploadFile(file, path) {
+  const { error } = await supabase.storage
+    .from("assets")
+    .upload(path, file, { upsert: true });
+
+  if (error) throw error;
+
+  return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
+}
+
+// 🔤 slug generálás
+function slugify(text) {
+  return text.toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^\w-]+/g, "");
+}
+
+async function init() {
+  const { data } = await supabase.auth.getSession();
+  let session = data.session;
+
+  // 🔐 LOGIN
+  if (!session) {
+    app.innerHTML = `
+      <div class="card">
+        <h2>Bejelentkezés</h2>
+        <input id="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Jelszó">
+        <button id="loginBtn">Belépés</button>
+      </div>
+    `;
+
+    document.getElementById("loginBtn").onclick = async () => {
+      const email = email.value;
+      const password = password.value;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) alert(error.message);
+      else location.reload();
+    };
+
+    return;
+  }
+
+  // ✅ ADMIN UI
+  app.innerHTML = `
+    <div class="card">
+      <h1>Digitális névjegy</h1>
+
+      <input id="name" placeholder="Név / Cégnév">
+
+      <input id="facebook" placeholder="Facebook">
+      <input id="instagram" placeholder="Instagram">
+      <input id="tiktok" placeholder="TikTok">
+      <input id="website" placeholder="Weboldal">
+      <input id="email" placeholder="Email">
+
+      <label>Gomb szín</label><br>
+      <input id="color" type="color" value="#ff6600">
+
+      <br><br>
+      <label>Logó</label><br>
+      <input id="logo" type="file">
+
+      <label>Háttérkép</label><br>
+      <input id="bg" type="file">
+
+      <label>VCF</label><br>
+      <input id="vcf" type="file">
+
+      <button id="genBtn">Link generálása</button>
+
+      <div id="link"></div>
+
+      <button id="logoutBtn" class="logout">Kijelentkezés</button>
+    </div>
+  `;
+
+  document.getElementById("logoutBtn").onclick = async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  };
+
+  // 🚀 GENERÁLÁS
+  document.getElementById("genBtn").onclick = async () => {
+    try {
+      const name = document.getElementById("name").value;
+      const slug = slugify(name);
+
+      // 📁 FILES
+      const logoFile = document.getElementById("logo").files[0];
+      const bgFile = document.getElementById("bg").files[0];
+      const vcfFile = document.getElementById("vcf").files[0];
+
+      let logoUrl = null;
+      let bgUrl = null;
+      let vcfUrl = null;
+
+      if (logoFile) {
+        logoUrl = await uploadFile(logoFile, `logos/${slug}.png`);
+      }
+
+      if (bgFile) {
+        bgUrl = await uploadFile(bgFile, `backgrounds/${slug}.jpg`);
+      }
+
+      if (vcfFile) {
+        vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
+      }
+
+      // 💾 DB mentés
+      const { error } = await supabase.from("profiles").insert({
+        slug,
+        name,
+        logo: logoUrl,
+        bg_image: bgUrl,
+        vcf: vcfUrl,
+        facebook: facebook.value || null,
+        instagram: instagram.value || null,
+        tiktok: tiktok.value || null,
+        website: website.value || null,
+        email: email.value || null,
+        button_color: color.value
+      });
+
+      if (error) throw error;
+
+      const url = `https://nevjegykartya-nine.vercel.app//p/${slug}`;
+
+      // 🔗 LINK
+      document.getElementById("link").innerHTML = `
+        <p><b>Link:</b></p>
+        <input id="copyField" value="${url}" readonly style="width:100%">
+        <button id="copyBtn" class="copyBtn">📋 Másolás</button>
+      `;
+
+      document.getElementById("copyBtn").onclick = async () => {
+        await navigator.clipboard.writeText(url);
+        alert("Kimásolva!");
+      };
+
+    } catch (err) {
+      alert("Hiba: " + err.message);
+    }
+  };
+}
+
+init();
+</script>
+</body>
+</html>
