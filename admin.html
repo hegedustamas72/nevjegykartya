@@ -8,10 +8,11 @@
   <style>
     body { font-family: Arial; text-align:center; padding:40px; background:#f0f0f0; }
     .card { background:#fff; padding:30px; border-radius:15px; max-width:500px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
-    input { width: 90%; padding:10px; margin:8px 0; font-size:15px; border-radius:8px; border:1px solid #ccc; }
+    input { width: 90%; padding:10px; margin:6px 0; font-size:14px; border-radius:8px; border:1px solid #ccc; }
     button { padding:14px 22px; font-size:16px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; margin-top:10px; }
     .logout { background:#ef5350; }
     .copyBtn { background:#4caf50; }
+    label { font-size:14px; display:block; margin-top:10px; }
   </style>
 </head>
 
@@ -21,7 +22,7 @@
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// ⚠️ Cseréld le a saját projekted adataira
+// 🔴 ÁLLÍTSD BE
 const supabase = createClient(
   "https://lvscrtgxcyabjftbsdmm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
@@ -34,13 +35,17 @@ async function uploadFile(file, path) {
   const { error } = await supabase.storage
     .from("assets")
     .upload(path, file, { upsert: true });
+
   if (error) throw error;
+
   return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
 }
 
-// 🔤 slug generálás
+// 🔤 slug
 function slugify(text) {
-  return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+  return text.toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^\w-]+/g, "");
 }
 
 async function init() {
@@ -62,18 +67,13 @@ async function init() {
       const emailInput = document.getElementById("email").value;
       const passwordInput = document.getElementById("password").value;
 
-      try {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: emailInput,
-          password: passwordInput
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailInput,
+        password: passwordInput
+      });
 
-        if (error) alert(error.message);
-        else location.reload();
-      } catch (err) {
-        console.error("Login hiba:", err);
-        alert("Hiba a bejelentkezés során. Nézd a konzolt!");
-      }
+      if (error) alert(error.message);
+      else location.reload();
     };
 
     return;
@@ -87,22 +87,30 @@ async function init() {
       <input id="name" placeholder="Név / Cégnév">
 
       <input id="facebook" placeholder="Facebook">
+      <input id="facebook_color" type="color" value="#3b5998">
+
       <input id="instagram" placeholder="Instagram">
+      <input id="instagram_color" type="color" value="#E1306C">
+
       <input id="tiktok" placeholder="TikTok">
+      <input id="tiktok_color" type="color" value="#69C9D0">
+
       <input id="website" placeholder="Weboldal">
+      <input id="website_color" type="color" value="#000000">
+
       <input id="emailField" placeholder="Email">
+      <input id="email_color" type="color" value="#6c63ff">
 
-      <label>Gomb szín</label><br>
-      <input id="color" type="color" value="#ff6600">
+      <input id="vcf_label" placeholder="Névjegy gomb felirat (pl. Mentés)">
+      <input id="vcf_color" type="color" value="#ff9900">
 
-      <br><br>
-      <label>Logó</label><br>
+      <label>Logó</label>
       <input id="logo" type="file">
 
-      <label>Háttérkép</label><br>
+      <label>Háttérkép</label>
       <input id="bg" type="file">
 
-      <label>VCF</label><br>
+      <label>VCF fájl</label>
       <input id="vcf" type="file">
 
       <button id="genBtn">Link generálása</button>
@@ -145,18 +153,22 @@ async function init() {
         bg_image: bgUrl,
         vcf: vcfUrl,
         facebook: document.getElementById("facebook").value || null,
+        facebook_color: document.getElementById("facebook_color").value,
         instagram: document.getElementById("instagram").value || null,
+        instagram_color: document.getElementById("instagram_color").value,
         tiktok: document.getElementById("tiktok").value || null,
+        tiktok_color: document.getElementById("tiktok_color").value,
         website: document.getElementById("website").value || null,
+        website_color: document.getElementById("website_color").value,
         email: document.getElementById("emailField").value || null,
-        button_color: document.getElementById("color").value
+        email_color: document.getElementById("email_color").value,
+        vcf_color: document.getElementById("vcf_color").value
       });
 
       if (error) throw error;
 
-      const url = `https://nevjegykartya-nine.vercel.app/p/${slug}`;
+      const url = `https://hegedustamas72.github.io/nevjegykartya/view.html?slug=${slug}`;
 
-      // 🔗 LINK
       document.getElementById("link").innerHTML = `
         <p><b>Link:</b></p>
         <input id="copyField" value="${url}" readonly style="width:100%">
