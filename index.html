@@ -21,9 +21,10 @@
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
+// ⚠️ Cseréld le a saját projekted adataira
 const supabase = createClient(
-  "https://lvscrtgxcyabjftbsdmm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
+  "https://YOUR_PROJECT.supabase.co",
+  "YOUR_ANON_KEY"
 );
 
 const app = document.getElementById("app");
@@ -33,22 +34,18 @@ async function uploadFile(file, path) {
   const { error } = await supabase.storage
     .from("assets")
     .upload(path, file, { upsert: true });
-
   if (error) throw error;
-
-  return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
+  return `https://YOUR_PROJECT.supabase.co/storage/v1/object/public/assets/${path}`;
 }
 
 // 🔤 slug generálás
 function slugify(text) {
-  return text.toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/[^\w-]+/g, "");
+  return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 }
 
 async function init() {
   const { data } = await supabase.auth.getSession();
-  let session = data.session;
+  const session = data.session;
 
   // 🔐 LOGIN
   if (!session) {
@@ -62,13 +59,21 @@ async function init() {
     `;
 
     document.getElementById("loginBtn").onclick = async () => {
-      const email = email.value;
-      const password = password.value;
+      const emailInput = document.getElementById("email").value;
+      const passwordInput = document.getElementById("password").value;
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: emailInput,
+          password: passwordInput
+        });
 
-      if (error) alert(error.message);
-      else location.reload();
+        if (error) alert(error.message);
+        else location.reload();
+      } catch (err) {
+        console.error("Login hiba:", err);
+        alert("Hiba a bejelentkezés során. Nézd a konzolt!");
+      }
     };
 
     return;
@@ -85,7 +90,7 @@ async function init() {
       <input id="instagram" placeholder="Instagram">
       <input id="tiktok" placeholder="TikTok">
       <input id="website" placeholder="Weboldal">
-      <input id="email" placeholder="Email">
+      <input id="emailField" placeholder="Email">
 
       <label>Gomb szín</label><br>
       <input id="color" type="color" value="#ff6600">
@@ -128,17 +133,9 @@ async function init() {
       let bgUrl = null;
       let vcfUrl = null;
 
-      if (logoFile) {
-        logoUrl = await uploadFile(logoFile, `logos/${slug}.png`);
-      }
-
-      if (bgFile) {
-        bgUrl = await uploadFile(bgFile, `backgrounds/${slug}.jpg`);
-      }
-
-      if (vcfFile) {
-        vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
-      }
+      if (logoFile) logoUrl = await uploadFile(logoFile, `logos/${slug}.png`);
+      if (bgFile) bgUrl = await uploadFile(bgFile, `backgrounds/${slug}.jpg`);
+      if (vcfFile) vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
 
       // 💾 DB mentés
       const { error } = await supabase.from("profiles").insert({
@@ -147,17 +144,17 @@ async function init() {
         logo: logoUrl,
         bg_image: bgUrl,
         vcf: vcfUrl,
-        facebook: facebook.value || null,
-        instagram: instagram.value || null,
-        tiktok: tiktok.value || null,
-        website: website.value || null,
-        email: email.value || null,
-        button_color: color.value
+        facebook: document.getElementById("facebook").value || null,
+        instagram: document.getElementById("instagram").value || null,
+        tiktok: document.getElementById("tiktok").value || null,
+        website: document.getElementById("website").value || null,
+        email: document.getElementById("emailField").value || null,
+        button_color: document.getElementById("color").value
       });
 
       if (error) throw error;
 
-      const url = `https://nevjegykartya-nine.vercel.app//p/${slug}`;
+      const url = `https://YOUR_DOMAIN.vercel.app/p/${slug}`;
 
       // 🔗 LINK
       document.getElementById("link").innerHTML = `
@@ -172,6 +169,7 @@ async function init() {
       };
 
     } catch (err) {
+      console.error(err);
       alert("Hiba: " + err.message);
     }
   };
