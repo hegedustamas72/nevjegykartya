@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Névjegy</title>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin:0;
+      font-family: Arial;
+      color:#fff;
+      text-align:center;
+      background:#000;
+    }
+
+    .background {
+      position:fixed;
+      width:100%;
+      height:100%;
+      background-size:cover;
+      background-position:center;
+      z-index:-2;
+      filter: blur(8px);
+      transform: scale(1.1);
+    }
+
+    .overlay {
+      position:fixed;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.65);
+      z-index:-1;
+    }
+
+    .top-logo {
+      width:120px;
+      margin-top:30px;
+      display:none;
+      animation: fadeIn 0.6s ease;
+    }
+
+    h1 {
+      margin:20px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    .container {
+      max-width:420px;
+      margin:auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding:20px;
+    }
+
+    .btn {
+      padding:14px;
+      border-radius:14px;
+      color:white;
+      text-decoration:none;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      font-size:18px;
+      transition: transform .2s, box-shadow .2s;
+      animation: fadeUp 0.4s ease;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    .loading, .error {
+      margin-top:100px;
+      font-size:20px;
+    }
+
+    @keyframes fadeIn {
+      from {opacity:0;}
+      to {opacity:1;}
+    }
+
+    @keyframes fadeUp {
+      from {opacity:0; transform: translateY(20px);}
+      to {opacity:1; transform: translateY(0);}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="background"></div>
+<div class="overlay"></div>
+
+<div id="content">
+  <div class="loading">Betöltés...</div>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+// 🔴 ÁLLÍTSD BE
+const supabase = createClient(
+  "https://lvscrtgxcyabjftbsdmm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
+);
+
+const content = document.getElementById("content");
+
+// 🔍 slug
+const params = new URLSearchParams(window.location.search);
+const slug = params.get("slug");
+
+if (!slug) {
+  content.innerHTML = '<div class="error">❗ Nincs megadva azonosító</div>';
+  throw new Error("Nincs slug");
+}
+
+try {
+  // 📥 adat lekérés
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !data) {
+    content.innerHTML = '<div class="error">❗ Nem található névjegy</div>';
+    throw error;
+  }
+
+  // 🎨 háttér
+  if (data.bg_image) {
+    document.querySelector(".background").style.backgroundImage =
+      `url(${data.bg_image})`;
+  }
+
+  // 🧱 UI felépítés
+  content.innerHTML = `
+    ${data.logo ? `<img src="${data.logo}" class="top-logo" id="logo">` : ""}
+    <h1>${data.name}</h1>
+    <div class="container" id="buttons"></div>
+  `;
+
+  const container = document.getElementById("buttons");
+
+  function createBtn(label, icon, url, color) {
+    if (!url) return;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.className = "btn";
+    a.style.background = color || "#333";
+
+    a.innerHTML = `<i class="${icon}"></i> ${label}`;
+    container.appendChild(a);
+  }
+
+  // 🎯 GOMBOK
+  createBtn("📇 Névjegy mentése", "fas fa-address-card", data.vcf, data.vcf_color);
+  createBtn("Facebook", "fab fa-facebook-f", data.facebook, data.facebook_color);
+  createBtn("Instagram", "fab fa-instagram", data.instagram, data.instagram_color);
+  createBtn("TikTok", "fab fa-tiktok", data.tiktok, data.tiktok_color);
+  createBtn("Weboldal", "fas fa-globe", data.website, data.website_color);
+
+  if (data.email) {
+    createBtn("Email", "fas fa-envelope", "mailto:" + data.email, data.email_color);
+  }
+
+} catch (err) {
+  console.error(err);
+  content.innerHTML = '<div class="error">❗ Hiba történt betöltéskor</div>';
+}
+</script>
+
+</body>
+</html>
