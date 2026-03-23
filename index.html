@@ -1,181 +1,127 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NFC Névjegy Admin</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kattkaland</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;700&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: Arial; text-align:center; padding:40px; background:#f0f0f0; }
-    .card { background:#fff; padding:30px; border-radius:15px; max-width:500px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
-    input { width: 90%; padding:10px; margin:8px 0; font-size:15px; border-radius:8px; border:1px solid #ccc; }
-    button { padding:14px 22px; font-size:16px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; margin-top:10px; }
-    .logout { background:#ef5350; }
-    .copyBtn { background:#4caf50; }
+    body {
+      margin: 0;
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url('wood-texture.png');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #424b54;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      padding: 40px 20px;
+    }
+
+    .logo {
+      width: 160px;
+      margin: 50px auto 20px auto;
+      display: block;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.1));
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 12px 0;
+      padding: 16px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 17px;
+      font-weight: 700;
+      color: white;
+      transition: 0.25s ease;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+
+    .btn img {
+      width: 22px;
+      height: 22px;
+    }
+
+    .btn-main {
+      background: linear-gradient(135deg, #9b6a6c, #e2b4bd);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #93a8ac, #424b54);
+    }
+
+    .btn-card {
+      background: linear-gradient(135deg, #93a8ac, #9b6a6c);
+    }
+
+    .btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+      opacity: 0.97;
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 480px) {
+      .btn {
+        font-size: 16px;
+        padding: 14px;
+      }
+    }
   </style>
 </head>
-
 <body>
-<div id="app">Betöltés...</div>
+  <div class="container">
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    <img src="logo.png" alt="Kattkaland logo" class="logo" />
 
-// ⚠️ Cseréld le a saját projekted adataira
-const supabase = createClient(
-  "https://YOUR_PROJECT.supabase.co",
-  "YOUR_ANON_KEY"
-);
+    <a href="https://facebook.com/kattkaland" class="btn btn-main" target="_blank">
+      <img src="facebook-icon.png" alt="Facebook" />
+      Facebook
+    </a>
 
-const app = document.getElementById("app");
+    <a href="underconstruction.html" class="btn btn-secondary" target="_blank">
+      <img src="brand-icon.png" alt="Web" />
+      Weboldal
+    </a>
 
-// 📁 FILE UPLOAD
-async function uploadFile(file, path) {
-  const { error } = await supabase.storage
-    .from("assets")
-    .upload(path, file, { upsert: true });
-  if (error) throw error;
-  return `https://YOUR_PROJECT.supabase.co/storage/v1/object/public/assets/${path}`;
-}
-
-// 🔤 slug generálás
-function slugify(text) {
-  return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
-}
-
-async function init() {
-  const { data } = await supabase.auth.getSession();
-  const session = data.session;
-
-  // 🔐 LOGIN
-  if (!session) {
-    app.innerHTML = `
-      <div class="card">
-        <h2>Bejelentkezés</h2>
-        <input id="email" placeholder="Email">
-        <input id="password" type="password" placeholder="Jelszó">
-        <button id="loginBtn">Belépés</button>
-      </div>
-    `;
-
-    document.getElementById("loginBtn").onclick = async () => {
-      const emailInput = document.getElementById("email").value;
-      const passwordInput = document.getElementById("password").value;
-
-      try {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: emailInput,
-          password: passwordInput
-        });
-
-        if (error) alert(error.message);
-        else location.reload();
-      } catch (err) {
-        console.error("Login hiba:", err);
-        alert("Hiba a bejelentkezés során. Nézd a konzolt!");
-      }
-    };
-
-    return;
-  }
-
-  // ✅ ADMIN UI
-  app.innerHTML = `
-    <div class="card">
-      <h1>Digitális névjegy</h1>
-
-      <input id="name" placeholder="Név / Cégnév">
-
-      <input id="facebook" placeholder="Facebook">
-      <input id="instagram" placeholder="Instagram">
-      <input id="tiktok" placeholder="TikTok">
-      <input id="website" placeholder="Weboldal">
-      <input id="emailField" placeholder="Email">
-
-      <label>Gomb szín</label><br>
-      <input id="color" type="color" value="#ff6600">
-
-      <br><br>
-      <label>Logó</label><br>
-      <input id="logo" type="file">
-
-      <label>Háttérkép</label><br>
-      <input id="bg" type="file">
-
-      <label>VCF</label><br>
-      <input id="vcf" type="file">
-
-      <button id="genBtn">Link generálása</button>
-
-      <div id="link"></div>
-
-      <button id="logoutBtn" class="logout">Kijelentkezés</button>
+    <a href="nevjegy.vcf" class="btn btn-card">
+      <img src="contact-icon.jpg" alt="Kontakt" />
+      Névjegy
+    </a>
+    
+    <a href="napipozitiv.html" class="btn btn-secondary" target="_blank">
+      <img src="pozitiv.png" alt="Napi" />
+      Napi pozitív
+      
+    </a>
+    <div class="footer">
+      Kézzel készült ajándékok • Természetes • Egyedi
     </div>
-  `;
 
-  document.getElementById("logoutBtn").onclick = async () => {
-    await supabase.auth.signOut();
-    location.reload();
-  };
-
-  // 🚀 GENERÁLÁS
-  document.getElementById("genBtn").onclick = async () => {
-    try {
-      const name = document.getElementById("name").value;
-      const slug = slugify(name);
-
-      // 📁 FILES
-      const logoFile = document.getElementById("logo").files[0];
-      const bgFile = document.getElementById("bg").files[0];
-      const vcfFile = document.getElementById("vcf").files[0];
-
-      let logoUrl = null;
-      let bgUrl = null;
-      let vcfUrl = null;
-
-      if (logoFile) logoUrl = await uploadFile(logoFile, `logos/${slug}.png`);
-      if (bgFile) bgUrl = await uploadFile(bgFile, `backgrounds/${slug}.jpg`);
-      if (vcfFile) vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
-
-      // 💾 DB mentés
-      const { error } = await supabase.from("profiles").insert({
-        slug,
-        name,
-        logo: logoUrl,
-        bg_image: bgUrl,
-        vcf: vcfUrl,
-        facebook: document.getElementById("facebook").value || null,
-        instagram: document.getElementById("instagram").value || null,
-        tiktok: document.getElementById("tiktok").value || null,
-        website: document.getElementById("website").value || null,
-        email: document.getElementById("emailField").value || null,
-        button_color: document.getElementById("color").value
-      });
-
-      if (error) throw error;
-
-      const url = `https://YOUR_DOMAIN.vercel.app/p/${slug}`;
-
-      // 🔗 LINK
-      document.getElementById("link").innerHTML = `
-        <p><b>Link:</b></p>
-        <input id="copyField" value="${url}" readonly style="width:100%">
-        <button id="copyBtn" class="copyBtn">📋 Másolás</button>
-      `;
-
-      document.getElementById("copyBtn").onclick = async () => {
-        await navigator.clipboard.writeText(url);
-        alert("Kimásolva!");
-      };
-
-    } catch (err) {
-      console.error(err);
-      alert("Hiba: " + err.message);
-    }
-  };
-}
-
-init();
-</script>
+  </div>
 </body>
 </html>
+
+<!--
+VCF fájl változatlan
+-->
