@@ -3,16 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin</title>
-
+<title>Admin – Digitális Névjegy</title>
 <style>
 body { font-family: Arial; text-align:center; padding:40px; background:#f0f0f0; }
 .card { background:#fff; padding:30px; border-radius:15px; max-width:520px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
 input { width: 90%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; }
-label { display:block; margin-top:10px; font-weight:bold; }
+label { display:block; margin-top:10px; font-weight:bold; text-align:left; }
 button { padding:14px; font-size:16px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; margin-top:10px; width:100%; }
 .copyBtn { background:#4caf50; }
-.color-row { display:flex; align-items:center; justify-content:space-between; }
+.color-row { display:flex; align-items:center; justify-content:space-between; margin:6px 0;}
 .color-row input[type="color"] { width:60px; height:40px; border:none; }
 </style>
 </head>
@@ -20,20 +19,19 @@ button { padding:14px; font-size:16px; border:none; border-radius:10px; backgrou
 <body>
 <div class="card">
 
-<h2>Digitális névjegy</h2>
+<h2>Digitális névjegy – Admin</h2>
 
-<input id="name" placeholder="Megjelenő név">
+<!-- Megjelenő név -->
+<label>Megjelenő név</label>
+<input id="name" placeholder="Pl. Szeged Volley">
 
+<!-- Képek -->
 <h3>Képek</h3>
+<label>Logó</label><input type="file" id="logo">
+<label>Háttérkép</label><input type="file" id="bg">
 
-<label>Logó</label>
-<input type="file" id="logo">
-
-<label>Háttérkép</label>
-<input type="file" id="bg">
-
+<!-- Kapcsolatok -->
 <h3>Kapcsolatok</h3>
-
 <input id="facebook" placeholder="Facebook felhasználónév">
 <div class="color-row">Facebook szín <input type="color" id="facebook_color" value="#1877f2"></div>
 
@@ -51,6 +49,14 @@ button { padding:14px; font-size:16px; border:none; border-radius:10px; backgrou
 
 <div class="color-row">Névjegy szín <input type="color" id="vcf_color" value="#9c27b0"></div>
 
+<!-- Kapcsolatok felirat -->
+<h3>Kapcsolatok felirat</h3>
+<label>Szöveg</label><input id="contacts_label_text" placeholder="Kapcsolatok" value="Kapcsolatok">
+<label>Betűtípus</label><input id="contacts_label_font" placeholder="Arial, Verdana..." value="Arial">
+<label>Szín</label><input type="color" id="contacts_label_color" value="#ffffff">
+<label>Betűméret</label><input id="contacts_label_size" placeholder="20px" value="20px">
+
+<!-- VCF -->
 <h3>Névjegy (VCF)</h3>
 <input id="lastName" placeholder="Vezetéknév">
 <input id="firstName" placeholder="Keresztnév">
@@ -58,9 +64,9 @@ button { padding:14px; font-size:16px; border:none; border-radius:10px; backgrou
 <input id="phone" placeholder="Telefon">
 <input id="address" placeholder="Cím">
 
+<!-- Gombok -->
 <button id="previewBtn">Preview</button>
 <button id="genBtn">Link generálása</button>
-
 <div id="link"></div>
 
 </div>
@@ -74,43 +80,28 @@ const supabase = createClient(
 );
 
 function val(id){ return document.getElementById(id).value.trim(); }
+function slugify(text){ return (text||"user") + "-" + Date.now(); }
 
-function slugify(text){
-  return (text || "user") + "-" + Date.now();
-}
-
-/* 🔥 FILE UPLOAD */
 async function uploadFile(file, path){
   if(!file) return null;
-
   const fileName = Date.now() + "_" + file.name;
-
-  const { error } = await supabase.storage
-    .from("assets")
-    .upload(path + "/" + fileName, file);
-
-  if(error){
-    alert(error.message);
-    return null;
-  }
-
-  return `https://YOUR_PROJECT.supabase.co/storage/v1/object/public/assets/${path}/${fileName}`;
+  const { error } = await supabase.storage.from("assets").upload(path + "/" + fileName, file);
+  if(error){ alert(error.message); return null; }
+  return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}/${fileName}`;
 }
 
-/* linkek */
 function buildLinks(){
   return {
-    facebook: val("facebook") ? "https://facebook.com/" + val("facebook") : null,
-    instagram: val("instagram") ? "https://instagram.com/" + val("instagram") : null,
-    tiktok: val("tiktok") ? "https://tiktok.com/@" + val("tiktok") : null,
+    facebook: val("facebook") ? "https://facebook.com/"+val("facebook") : null,
+    instagram: val("instagram") ? "https://instagram.com/"+val("instagram") : null,
+    tiktok: val("tiktok") ? "https://tiktok.com/@"+val("tiktok") : null,
     website: val("website") || null,
-    email: val("email") || null
+    email: val("email") ? "mailto:"+val("email") : null
   };
 }
 
 /* PREVIEW */
 document.getElementById("previewBtn").onclick = async () => {
-
   const logoFile = document.getElementById("logo").files[0];
   const bgFile = document.getElementById("bg").files[0];
 
@@ -118,14 +109,18 @@ document.getElementById("previewBtn").onclick = async () => {
     ...buildLinks(),
     logo: logoFile ? URL.createObjectURL(logoFile) : null,
     bg_image: bgFile ? URL.createObjectURL(bgFile) : null,
-
     facebook_color: val("facebook_color"),
     instagram_color: val("instagram_color"),
     tiktok_color: val("tiktok_color"),
     website_color: val("website_color"),
     email_color: val("email_color"),
     vcf_color: val("vcf_color"),
-
+    contacts_label: {
+      text: val("contacts_label_text"),
+      font: val("contacts_label_font"),
+      color: val("contacts_label_color"),
+      size: val("contacts_label_size")
+    },
     first_name: val("firstName"),
     last_name: val("lastName"),
     company: val("company"),
@@ -135,14 +130,12 @@ document.getElementById("previewBtn").onclick = async () => {
   };
 
   localStorage.setItem("previewData", JSON.stringify(data));
-  window.open("view.html?preview=true", "_blank");
+  window.open("view.html?preview=true","_blank");
 };
 
 /* GENERÁLÁS */
 document.getElementById("genBtn").onclick = async () => {
-
   const slug = slugify(val("name"));
-
   const logoFile = document.getElementById("logo").files[0];
   const bgFile = document.getElementById("bg").files[0];
 
@@ -152,17 +145,20 @@ document.getElementById("genBtn").onclick = async () => {
   const payload = {
     slug,
     ...buildLinks(),
-
     logo: logoUrl,
     bg_image: bgUrl,
-
     facebook_color: val("facebook_color"),
     instagram_color: val("instagram_color"),
     tiktok_color: val("tiktok_color"),
     website_color: val("website_color"),
     email_color: val("email_color"),
     vcf_color: val("vcf_color"),
-
+    contacts_label: {
+      text: val("contacts_label_text"),
+      font: val("contacts_label_font"),
+      color: val("contacts_label_color"),
+      size: val("contacts_label_size")
+    },
     first_name: val("firstName"),
     last_name: val("lastName"),
     company: val("company"),
@@ -172,14 +168,9 @@ document.getElementById("genBtn").onclick = async () => {
   };
 
   const { error } = await supabase.from("profiles").insert(payload);
-
-  if(error){
-    alert(error.message);
-    return;
-  }
+  if(error){ alert(error.message); return; }
 
   const url = location.origin + "/view.html?slug=" + slug;
-
   document.getElementById("link").innerHTML = `
     <input value="${url}" style="width:100%">
     <button class="copyBtn" onclick="navigator.clipboard.writeText('${url}')">Másolás</button>
