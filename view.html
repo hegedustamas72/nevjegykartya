@@ -37,6 +37,7 @@ body {
   width:100%;
   padding:20px;
   box-sizing:border-box;
+  position:relative;
 }
 h1 {
   font-size:2em; margin-bottom:20px;
@@ -46,6 +47,7 @@ h1 {
   width:90%; max-width:420px;
   display:flex; flex-direction:column;
   gap:16px;
+  position:relative;
 }
 .social-button {
   font-size:18px; padding:14px;
@@ -58,6 +60,29 @@ h1 {
 }
 .social-button i { font-size:22px; }
 .social-button:hover { transform:scale(1.08); box-shadow:0 8px 25px rgba(255,102,0,0.6); }
+
+.button-row {
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  width:100%;
+}
+
+.left-col, .right-col {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  flex:1;
+  align-items:center;
+}
+
+.absolute-last {
+  position:absolute;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+}
+
 @media (max-width:600px){
   .button-container{ display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   .social-button{ font-size:16px; padding:12px;}
@@ -102,7 +127,6 @@ async function init() {
     container.innerHTML='';
 
     if(activeButtons.length <=3){
-        // Egy oszlop
         activeButtons.forEach(b=>{
             const a=document.createElement('a');
             a.className='social-button';
@@ -112,16 +136,11 @@ async function init() {
             container.appendChild(a);
         });
     } else {
-        // Kéthasábos
+        // Kéthasábos elrendezés
         const leftCol=document.createElement('div');
+        leftCol.className='left-col';
         const rightCol=document.createElement('div');
-        [leftCol,rightCol].forEach(c=>{
-            c.style.display='flex';
-            c.style.flexDirection='column';
-            c.style.gap='12px';
-            c.style.flex='1';
-            c.style.alignItems='center';
-        });
+        rightCol.className='right-col';
 
         const lastIndex = activeButtons.length -1;
         activeButtons.forEach((b,i)=>{
@@ -131,25 +150,17 @@ async function init() {
             a.style.backgroundColor=b.color;
             a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
 
+            // Páratlan szám >3: az utolsó gomb abszolút alul középre
             if(activeButtons.length %2===1 && i===lastIndex){
-                // utolsó gomb páratlan esetén középre
-                const row=document.createElement('div');
-                row.style.display='flex';
-                row.style.justifyContent='center';
-                row.style.alignItems='center';
-                row.style.width='100%';
-                row.style.marginTop='12px';
-                row.appendChild(a);
-                container.appendChild(row);
+                a.classList.add('absolute-last');
+                container.appendChild(a);
             } else {
                 (i%2===0 ? leftCol : rightCol).appendChild(a);
             }
         });
 
         const row=document.createElement('div');
-        row.style.display='flex';
-        row.style.gap='12px';
-        row.style.justifyContent='center';
+        row.className='button-row';
         row.appendChild(leftCol);
         row.appendChild(rightCol);
         container.appendChild(row);
