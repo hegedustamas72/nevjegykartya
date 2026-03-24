@@ -2,52 +2,102 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin</title>
 <style>
-body{font-family:Arial;padding:20px;background:#f0f0f0;}
-.card{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:12px;}
-input,select{width:100%;margin:6px 0;padding:10px;}
-button{padding:12px;margin-top:10px;width:100%;cursor:pointer;}
+body{font-family:Arial;background:#f0f0f0;padding:20px;}
+.card{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px;}
+label{font-weight:bold;margin-top:10px;display:block;}
+input,select{width:100%;padding:10px;margin-top:5px;}
+button{margin-top:15px;padding:12px;width:100%;cursor:pointer;}
+.row{display:flex;gap:10px;}
 </style>
 </head>
 <body>
+
 <div class="card">
 
-<input id="filename" placeholder="Hívónév">
+<label>Hívónév (slug alap)</label>
+<input id="filename">
 
-<input id="facebook" placeholder="Facebook">
-<input id="instagram" placeholder="Instagram">
-<input id="tiktok" placeholder="TikTok">
-<input id="website" placeholder="Web">
-<input id="emailUser" placeholder="Email">
+<label>Facebook</label>
+<input id="facebook">
 
-<input id="vcf_first" placeholder="Keresztnév">
-<input id="vcf_last" placeholder="Vezetéknév">
-<input id="vcf_company" placeholder="Cég">
-<input id="vcf_phone" placeholder="Telefon">
-<input id="vcf_address" placeholder="Cím">
+<label>Instagram</label>
+<input id="instagram">
 
+<label>TikTok</label>
+<input id="tiktok">
+
+<label>Weboldal</label>
+<input id="website">
+
+<label>Email</label>
+<input id="emailUser">
+
+<h3>Névjegy (.vcf)</h3>
+
+<label>Keresztnév</label>
+<input id="vcf_first">
+
+<label>Vezetéknév</label>
+<input id="vcf_last">
+
+<label>Cég</label>
+<input id="vcf_company">
+
+<label>Telefon</label>
+<input id="vcf_phone">
+
+<label>Cím</label>
+<input id="vcf_address">
+
+<h3>Képek</h3>
+
+<label>Logó feltöltés</label>
 <input type="file" id="logo_image">
+
+<label>Háttérkép feltöltés</label>
 <input type="file" id="bg_image">
 
-<input id="contacts_label" placeholder="Kapcsolatok felirat">
+<h3>Felirat</h3>
+
+<label>Kapcsolatok szöveg</label>
+<input id="contacts_label">
+
+<label>Betűtípus</label>
 <select id="contacts_font">
 <option>Arial</option>
 <option>Verdana</option>
 <option>Tahoma</option>
 </select>
-<input type="color" id="contacts_color">
+
+<label>Betűszín</label>
+<input type="color" id="contacts_color" value="#ffffff">
+
+<label>Betűméret</label>
 <input type="number" id="contacts_size" value="24">
 
+<h3>Gomb színek</h3>
+
+<label>Facebook gomb</label>
 <input type="color" id="facebook_color">
+
+<label>Instagram gomb</label>
 <input type="color" id="instagram_color">
+
+<label>TikTok gomb</label>
 <input type="color" id="tiktok_color">
+
+<label>Web gomb</label>
 <input type="color" id="website_color">
+
+<label>Névjegy gomb</label>
 <input type="color" id="vcf_color">
+
+<label>Email gomb</label>
 <input type="color" id="email_color">
 
-<button id="genBtn">Mentés</button>
+<button id="genBtn">Mentés és link generálás</button>
 <button id="previewBtn">Preview</button>
 
 <div id="link"></div>
@@ -72,12 +122,39 @@ r.readAsDataURL(file);
 });
 }
 
-// 🔵 MENTÉS
 genBtn.onclick = async ()=>{
 
 const slug = slugify(filename.value);
 
-const vcf=`BEGIN:VCARD
+const bucket='assets';
+const uploaded={};
+
+// 🔥 FILE UPLOAD
+const files={
+logo:logo_image.files[0],
+bg:bg_image.files[0]
+};
+
+for(const k in files){
+if(files[k]){
+const path =
+k==='logo'?`logos/${slug}_${files[k].name}`:
+`backgrounds/${slug}_${files[k].name}`;
+
+const {error}=await supabase.storage.from(bucket).upload(path,files[k]);
+
+if(error){
+alert("Storage hiba: "+error.message);
+return;
+}
+
+const {data}=supabase.storage.from(bucket).getPublicUrl(path);
+uploaded[k]=data.publicUrl;
+}
+}
+
+// 🔥 VCF GENERÁLÁS (nem töltjük fel!)
+const vcf=`data:text/vcard;charset=utf-8,${encodeURIComponent(`BEGIN:VCARD
 VERSION:3.0
 N:${vcf_last.value};${vcf_first.value}
 FN:${vcf_first.value} ${vcf_last.value}
@@ -85,39 +162,21 @@ ORG:${vcf_company.value}
 TEL:${vcf_phone.value}
 EMAIL:${emailUser.value}
 ADR:${vcf_address.value}
-END:VCARD`;
+END:VCARD`)}`;
 
-const vcfFile = new File([vcf], slug+".vcf");
-
-const files={logo:logo_image.files[0],bg:bg_image.files[0],vcf:vcfFile};
-const bucket='assets';
-const uploaded={};
-
-for(const k in files){
-if(files[k]){
-const path =
-k==='logo'?`logos/${slug}_${files[k].name}`:
-k==='bg'?`backgrounds/${slug}_${files[k].name}`:
-`vcf/${slug}_${files[k].name}`;
-
-await supabase.storage.from(bucket).upload(path,files[k]);
-
-const {data}=supabase.storage.from(bucket).getPublicUrl(path);
-uploaded[k]=data.publicUrl;
-}
-}
-
-await supabase.from('profiles').insert([{
+// 🔥 DB INSERT
+const {error} = await supabase.from('profiles').insert([{
 slug,
+
 facebook:facebook.value?`https://facebook.com/${facebook.value}`:null,
 instagram:instagram.value?`https://instagram.com/${instagram.value}`:null,
 tiktok:tiktok.value?`https://tiktok.com/@${tiktok.value}`:null,
-website:website.value.startsWith('http')?website.value:`https://${website.value}`,
+website:website.value? (website.value.startsWith('http')?website.value:`https://${website.value}`):null,
 email:emailUser.value,
 
 logo:uploaded.logo,
 bg_image:uploaded.bg,
-vcf:uploaded.vcf,
+vcf,
 
 contacts_label:contacts_label.value,
 contacts_font:contacts_font.value,
@@ -132,15 +191,29 @@ vcf_color:vcf_color.value,
 email_color:email_color.value
 }]);
 
-link.innerHTML = `${location.origin}/view.html?slug=${slug}`;
+if(error){
+console.log(error);
+alert("DB hiba: "+error.message);
+return;
+}
+
+// 🔥 LINK + COPY
+const url = `${location.origin}/view.html?slug=${slug}`;
+
+link.innerHTML = `
+<input value="${url}" id="genLink">
+<button onclick="navigator.clipboard.writeText(document.getElementById('genLink').value)">Másolás</button>
+`;
+
 };
 
-// 🔵 PREVIEW
+// PREVIEW
 previewBtn.onclick = async ()=>{
+
 const data={
-facebook:`https://facebook.com/${facebook.value}`,
-instagram:`https://instagram.com/${instagram.value}`,
-tiktok:`https://tiktok.com/@${tiktok.value}`,
+facebook:facebook.value,
+instagram:instagram.value,
+tiktok:tiktok.value,
 website:website.value,
 email:emailUser.value,
 
@@ -160,9 +233,8 @@ email_color:email_color.value
 if(logo_image.files[0]) data.logo=await readFile(logo_image.files[0]);
 if(bg_image.files[0]) data.bg_image=await readFile(bg_image.files[0]);
 
-data.vcf="#";
-
 localStorage.setItem('previewData',JSON.stringify(data));
+
 window.open('view.html?preview=true');
 };
 </script>
