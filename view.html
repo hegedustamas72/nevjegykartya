@@ -6,27 +6,58 @@
 <title>Digitális Névjegy</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-html, body { margin:0; padding:0; width:100%; height:100%; font-family:Arial,sans-serif; color:#fff; }
-body { display:flex; justify-content:center; align-items:center; text-align:center; overflow:hidden; }
-.background { position:fixed; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center; z-index:-2; }
-.content-wrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; width:100%; padding:20px; box-sizing:border-box; }
+html, body {
+  margin:0; padding:0;
+  width:100%; height:100%;
+  font-family:Arial, sans-serif;
+  color:#fff;
+  overflow:hidden;
+}
+body {
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  text-align:center;
+  background:#000;
+}
+.background {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  background-size:cover; background-position:center;
+  z-index:-2;
+}
 .top-logo { width:130px; margin:20px 0; filter:drop-shadow(0 0 8px #fff); }
-h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 6px rgba(0,0,0,0.6); }
-.contacts-label { margin-bottom:20px; }
-.button-container { width:90%; max-width:420px; display:flex; flex-direction:column; gap:16px; }
-.social-button { font-size:18px; padding:14px; border-radius:14px; text-decoration:none; color:#fff; display:flex; align-items:center; justify-content:center; gap:10px; transition:transform .25s, box-shadow .25s; border:2px solid #FF6600; box-shadow:0 4px 12px rgba(0,0,0,0.4); }
+.content-wrapper {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:100vh; width:100%; padding:20px; box-sizing:border-box;
+}
+h1 { font-size:2em; margin-bottom:20px; text-shadow:2px 2px 6px rgba(0,0,0,0.6); }
+#contacts-label { margin-bottom:16px; }
+.button-container { display:flex; flex-direction:column; gap:16px; width:90%; max-width:420px; }
+.button-row { display:flex; gap:12px; justify-content:center; width:100%; }
+.social-button {
+  font-size:18px; padding:14px;
+  border-radius:14px; text-decoration:none;
+  color:#fff; display:flex; align-items:center;
+  justify-content:center; gap:10px;
+  transition:transform .25s, box-shadow .25s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+}
 .social-button i { font-size:22px; }
-.social-button:hover { transform:scale(1.08); box-shadow:0 8px 25px rgba(255,102,0,0.6); }
-@media(max-width:600px){ .button-container{ display:grid; grid-template-columns:1fr 1fr; gap:12px; } .social-button{ font-size:16px; padding:12px;} .top-logo{ width:110px; } }
+.social-button:hover { transform:scale(1.08); box-shadow:0 8px 25px rgba(255,255,255,0.6); }
+@media (max-width:600px){
+  .button-container{ gap:12px;}
+  .social-button{ font-size:16px; padding:12px;}
+  .top-logo{ width:110px;}
+}
 </style>
 </head>
 <body>
 <div class="background"></div>
 <div class="content-wrapper">
   <img class="top-logo" src="" alt="Logó">
-  <h1>Csatlakozz hozzánk!</h1>
-  <div class="contacts-label" id="contactsLabel"></div>
-  <div class="button-container" id="buttonContainer"></div>
+  <h1 id="contacts-label">Kapcsolatok</h1>
+  <div class="button-container"></div>
 </div>
 
 <script>
@@ -34,71 +65,84 @@ let previewData = null;
 const urlParams = new URLSearchParams(window.location.search);
 const isPreview = urlParams.get('preview')==='true';
 if(isPreview){
-    previewData = JSON.parse(localStorage.getItem('previewData') || '{}');
-}
-
-function createButton(btn){
-    const a=document.createElement('a');
-    a.className='social-button';
-    a.href=btn.url;
-    a.target='_blank';
-    a.style.backgroundColor = btn.color;
-    a.innerHTML = `<i class="${btn.icon}"></i> ${btn.label}`;
-    return a;
-}
-
-function layoutButtons(container, buttons){
-    container.innerHTML='';
-    if(buttons.length <=3){
-        buttons.forEach(b=>container.appendChild(createButton(b)));
-    } else {
-        const leftCol=document.createElement('div');
-        const rightCol=document.createElement('div');
-        [leftCol,rightCol].forEach(c=>{ c.style.display='flex'; c.style.flexDirection='column'; c.style.gap='12px'; c.style.flex='1'; });
-        const lastIndex = buttons.length-1;
-        buttons.forEach((b,i)=>{
-            const btnEl = createButton(b);
-            if(buttons.length %2===1 && i===lastIndex){
-                const row=document.createElement('div');
-                row.style.display='flex';
-                row.style.justifyContent='center';
-                row.style.width='100%';
-                row.style.marginTop='12px';
-                row.appendChild(btnEl);
-                container.appendChild(row);
-            } else (i%2===0 ? leftCol:rightCol).appendChild(btnEl);
-        });
-        const row=document.createElement('div');
-        row.style.display='flex';
-        row.style.gap='12px';
-        row.style.justifyContent='center';
-        row.appendChild(leftCol);
-        row.appendChild(rightCol);
-        container.appendChild(row);
-    }
+  previewData = JSON.parse(localStorage.getItem('previewData')||'{}');
 }
 
 async function init(){
-    const data = previewData || JSON.parse(localStorage.getItem('previewData')||'{}');
-    if(!data) return console.error("Nincs adat");
+  const data = previewData || await fetchData(urlParams.get('slug'));
+  if(!data) return console.error("Nincs adat");
 
-    if(data.bg_image) document.querySelector('.background').style.backgroundImage=`url(${data.bg_image})`;
-    if(data.logo) document.querySelector('.top-logo').src = data.logo;
+  if(data.bg_image) document.querySelector('.background').style.backgroundImage = `url(${data.bg_image})`;
+  if(data.logo) document.querySelector('.top-logo').src = data.logo;
 
-    const contactsLabel = document.getElementById('contactsLabel');
-    contactsLabel.textContent = data.contacts_label||'Kapcsolatok';
-    contactsLabel.style.color = data.contacts_color||'#fff';
-    contactsLabel.style.fontSize = (data.contacts_size||20)+'px';
+  const contactsLabel = document.getElementById('contacts-label');
+  contactsLabel.textContent = data.contacts_label || 'Kapcsolatok';
+  contactsLabel.style.fontFamily = data.contacts_font || 'Arial';
+  contactsLabel.style.color = data.contacts_color || '#ffffff';
+  contactsLabel.style.fontSize = (data.contacts_size||24)+'px';
 
-    const buttons=[
-        {key:'facebook', label:'Facebook', icon:'fab fa-facebook-f', color:data.facebook_color, url:data.facebook},
-        {key:'instagram', label:'Instagram', icon:'fab fa-instagram', color:data.instagram_color, url:data.instagram},
-        {key:'tiktok', label:'TikTok', icon:'fab fa-tiktok', color:data.tiktok_color, url:data.tiktok},
-        {key:'website', label:'Weboldal', icon:'fas fa-globe', color:data.website_color, url:data.website},
-        {key:'vcf', label:'Névjegy', icon:'fas fa-address-card', color:'#ff9900', url:data.vcf},
-        {key:'email', label:'Email', icon:'fas fa-envelope', color:'#6c63ff', url:data.email ? 'mailto:'+data.email : null}
-    ].filter(b=>b.url);
-    layoutButtons(document.getElementById('buttonContainer'), buttons);
+  const buttonsOrder = ['facebook','instagram','tiktok','website','vcf','email'];
+  const buttonsData = {
+    facebook: {label:'Facebook', icon:'fab fa-facebook-f', color:data.facebook_color, url:data.facebook},
+    instagram: {label:'Instagram', icon:'fab fa-instagram', color:data.instagram_color, url:data.instagram},
+    tiktok: {label:'TikTok', icon:'fab fa-tiktok', color:data.tiktok_color, url:data.tiktok},
+    website: {label:'Web', icon:'fas fa-globe', color:data.website_color, url:data.website},
+    vcf: {label:data.vcf_label || 'Névjegy', icon:'fas fa-address-card', color:data.vcf_color, url:data.vcf},
+    email: {label:'Email', icon:'fas fa-envelope', color:data.email_color, url:data.email ? 'mailto:'+data.email : null}
+  };
+
+  const activeButtons = buttonsOrder.map(k=>buttonsData[k]).filter(b=>b.url);
+  const container = document.querySelector('.button-container');
+  container.innerHTML='';
+
+  if(activeButtons.length<=3){
+    activeButtons.forEach(b=>{ appendButton(container,b); });
+  } else {
+    // Kéthasábos elrendezés
+    const leftCol=document.createElement('div');
+    const rightCol=document.createElement('div');
+    [leftCol,rightCol].forEach(c=>{c.style.display='flex'; c.style.flexDirection='column'; c.style.gap='12px'; c.style.flex='1';});
+
+    const lastIndex = activeButtons.length-1;
+    activeButtons.forEach((b,i)=>{
+      const btn = createButton(b);
+      if(activeButtons.length%2===1 && i===lastIndex){
+        const row=document.createElement('div');
+        row.style.display='flex'; row.style.justifyContent='center'; row.style.width='100%'; row.style.marginTop='12px';
+        row.appendChild(btn);
+        container.appendChild(row);
+      } else (i%2===0 ? leftCol : rightCol).appendChild(btn);
+    });
+
+    const row=document.createElement('div');
+    row.className='button-row';
+    row.appendChild(leftCol);
+    row.appendChild(rightCol);
+    container.appendChild(row);
+  }
+
+  function appendButton(parent,b){
+    const a=createButton(b);
+    parent.appendChild(a);
+  }
+  function createButton(b){
+    const a=document.createElement('a');
+    a.className='social-button';
+    a.href=b.url; a.style.backgroundColor=b.color;
+    a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
+    return a;
+  }
+}
+
+async function fetchData(slug){
+  if(!slug) return null;
+  try{
+    const res=await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`,{
+      headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw', Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw'}
+    });
+    const json=await res.json();
+    return json[0]||null;
+  }catch(e){ console.error(e); return null;}
 }
 
 init();
