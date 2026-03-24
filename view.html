@@ -45,6 +45,7 @@ h1 {
   width:90%; max-width:420px;
   display:flex; flex-direction:column;
   gap:16px;
+  align-items:center;
 }
 .social-button {
   font-size:18px; padding:14px;
@@ -58,13 +59,13 @@ h1 {
 .social-button i { font-size:22px; }
 .social-button:hover { transform:scale(1.08); box-shadow:0 8px 25px rgba(255,102,0,0.6); }
 
+/* Kéthasábos elrendezés 4+ gombnál */
 .button-row {
   display:flex;
   justify-content:center;
   gap:12px;
   width:100%;
 }
-
 .left-col, .right-col {
   display:flex;
   flex-direction:column;
@@ -73,6 +74,7 @@ h1 {
   align-items:center;
 }
 
+/* Mobil optimalizálás */
 @media (max-width:600px){
   .button-container{ display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   .social-button{ font-size:16px; padding:12px;}
@@ -116,11 +118,11 @@ async function init() {
     const container = document.querySelector('.button-container');
     container.innerHTML='';
 
-    // 1. Számoljuk a maximális gombszélességet
     const minChars = 6;
     const maxLength = Math.max(...activeButtons.map(b=>b.label.length), minChars);
 
     if(activeButtons.length <=3){
+        // Egy oszlop
         activeButtons.forEach(b=>{
             const a=document.createElement('a');
             a.className='social-button';
@@ -131,45 +133,47 @@ async function init() {
             container.appendChild(a);
         });
     } else {
-        const leftCol=document.createElement('div'); leftCol.className='left-col';
-        const rightCol=document.createElement('div'); rightCol.className='right-col';
+        // Kéthasábos elrendezés
+        const leftCol = document.createElement('div'); leftCol.className='left-col';
+        const rightCol = document.createElement('div'); rightCol.className='right-col';
 
-        const lastIndex = activeButtons.length -1;
         activeButtons.forEach((b,i)=>{
             const a=document.createElement('a');
             a.className='social-button';
             a.href=b.url;
             a.style.backgroundColor=b.color;
             a.style.width = `${maxLength}ch`;
-            a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
+            a.innerHTML = `<i class="${b.icon}"></i> ${b.label}`;
 
-            // Páratlan szám >3: utolsó gomb külön sorban, középre
-            if(activeButtons.length %2===1 && i===lastIndex){
-                const row=document.createElement('div');
-                row.style.display='flex';
-                row.style.justifyContent='center';
-                row.style.marginTop='12px';
-                row.appendChild(a);
-                container.appendChild(row);
-            } else {
-                (i%2===0 ? leftCol : rightCol).appendChild(a);
-            }
+            (i%2===0 ? leftCol : rightCol).appendChild(a);
         });
 
-        const row=document.createElement('div'); row.className='button-row';
+        const row = document.createElement('div'); row.className='button-row';
         row.appendChild(leftCol);
         row.appendChild(rightCol);
         container.appendChild(row);
+
+        // Páratlan gomb esetén az utolsó gomb alul középre
+        if(activeButtons.length %2 ===1){
+            const lastLeft = leftCol.lastElementChild;
+            leftCol.removeChild(lastLeft);
+            const centerRow = document.createElement('div');
+            centerRow.style.display = 'flex';
+            centerRow.style.justifyContent = 'center';
+            centerRow.style.marginTop = '12px';
+            centerRow.appendChild(lastLeft);
+            container.appendChild(centerRow);
+        }
     }
 }
 
 async function fetchDataFromSlug(slug){
     if(!slug) return null;
     try{
-        const res=await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`, {
+        const res = await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`, {
             headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw', Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw'}
         });
-        const json=await res.json();
+        const json = await res.json();
         return json[0] || null;
     }catch(e){ console.error(e); return null;}
 }
