@@ -31,7 +31,10 @@ body {
 .content-wrapper {
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  height:100%; width:100%;
+  min-height:100vh;
+  width:100%;
+  padding:20px;
+  box-sizing:border-box;
 }
 h1 {
   font-size:2em; margin-bottom:20px;
@@ -119,11 +122,12 @@ async function init() {
             a.style.backgroundColor=b.color;
             a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
 
-            // Ha páratlan és több mint 3 gomb, az utolsó középre alul
+            // Páratlan szám >3: az utolsó gomb külön sorban középen
             if(activeButtons.length % 2 ===1 && activeButtons.length >3 && i === lastIndex){
                 const row=document.createElement('div');
                 row.style.display='flex';
                 row.style.justifyContent='center';
+                row.style.width='100%';
                 row.style.marginTop='12px';
                 row.appendChild(a);
                 container.appendChild(row);
