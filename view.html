@@ -142,7 +142,14 @@ try {
     container.appendChild(a);
   }
 
-  createBtn(data.vcf_label ? data.vcf_label : "Névjegy", "fas fa-address-card", data.vcf, data.vcf_color);
+  if (data.vcf || isPreview) {
+  createBtn(
+    data.vcf_label ? data.vcf_label : "Névjegy",
+    "fas fa-address-card",
+    data.vcf || "#",
+    data.vcf_color
+  );
+}
   createBtn("Facebook", "fab fa-facebook-f", data.facebook, data.facebook_color);
   createBtn("Instagram", "fab fa-instagram", data.instagram, data.instagram_color);
   createBtn("TikTok", "fab fa-tiktok", data.tiktok, data.tiktok_color);
