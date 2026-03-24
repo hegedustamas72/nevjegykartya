@@ -155,7 +155,7 @@ try {
     container.appendChild(a);
   }
 
-  createBtn("Névjegy", "fas fa-address-card", data.vcf, data.vcf_color);
+  createBtn(data.vcf_label || "Névjegy", ...
   createBtn("Facebook", "fab fa-facebook-f", data.facebook, data.facebook_color);
   createBtn("Instagram", "fab fa-instagram", data.instagram, data.instagram_color);
   createBtn("TikTok", "fab fa-tiktok", data.tiktok, data.tiktok_color);
