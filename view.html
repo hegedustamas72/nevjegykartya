@@ -111,7 +111,7 @@ async function init() {
             c.style.flex='1';
         });
 
-        const midIndex = Math.floor(activeButtons.length/2);
+        const lastIndex = activeButtons.length -1;
         activeButtons.forEach((b,i)=>{
             const a=document.createElement('a');
             a.className='social-button';
@@ -119,12 +119,12 @@ async function init() {
             a.style.backgroundColor=b.color;
             a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
 
-            // Ha páratlan számú gomb és ez az utolsó elem, középre tesszük
-            if(activeButtons.length % 2 === 1 && i === activeButtons.length -1){
+            // Ha páratlan és több mint 3 gomb, az utolsó középre alul
+            if(activeButtons.length % 2 ===1 && activeButtons.length >3 && i === lastIndex){
                 const row=document.createElement('div');
                 row.style.display='flex';
                 row.style.justifyContent='center';
-                row.style.gap='12px';
+                row.style.marginTop='12px';
                 row.appendChild(a);
                 container.appendChild(row);
             } else {
@@ -132,15 +132,13 @@ async function init() {
             }
         });
 
-        if(activeButtons.length %2 ===0 || activeButtons.length>3){
-            const row=document.createElement('div');
-            row.style.display='flex';
-            row.style.gap='12px';
-            row.style.justifyContent='center';
-            row.appendChild(leftCol);
-            row.appendChild(rightCol);
-            container.appendChild(row);
-        }
+        const row=document.createElement('div');
+        row.style.display='flex';
+        row.style.gap='12px';
+        row.style.justifyContent='center';
+        row.appendChild(leftCol);
+        row.appendChild(rightCol);
+        container.appendChild(row);
     }
 }
 
