@@ -15,7 +15,6 @@ html, body {
 }
 body {
   display:flex;
-  flex-direction:column;
   justify-content:center;
   align-items:center;
   text-align:center;
@@ -37,7 +36,6 @@ body {
   width:100%;
   padding:20px;
   box-sizing:border-box;
-  position:relative;
 }
 h1 {
   font-size:2em; margin-bottom:20px;
@@ -47,7 +45,6 @@ h1 {
   width:90%; max-width:420px;
   display:flex; flex-direction:column;
   gap:16px;
-  position:relative;
 }
 .social-button {
   font-size:18px; padding:14px;
@@ -74,13 +71,6 @@ h1 {
   gap:12px;
   flex:1;
   align-items:center;
-}
-
-.absolute-last {
-  position:absolute;
-  bottom:0;
-  left:50%;
-  transform:translateX(-50%);
 }
 
 @media (max-width:600px){
@@ -126,21 +116,23 @@ async function init() {
     const container = document.querySelector('.button-container');
     container.innerHTML='';
 
+    // 1. Számoljuk a maximális gombszélességet
+    const minChars = 6;
+    const maxLength = Math.max(...activeButtons.map(b=>b.label.length), minChars);
+
     if(activeButtons.length <=3){
         activeButtons.forEach(b=>{
             const a=document.createElement('a');
             a.className='social-button';
             a.href=b.url;
             a.style.backgroundColor=b.color;
+            a.style.width = `${maxLength}ch`;
             a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
             container.appendChild(a);
         });
     } else {
-        // Kéthasábos elrendezés
-        const leftCol=document.createElement('div');
-        leftCol.className='left-col';
-        const rightCol=document.createElement('div');
-        rightCol.className='right-col';
+        const leftCol=document.createElement('div'); leftCol.className='left-col';
+        const rightCol=document.createElement('div'); rightCol.className='right-col';
 
         const lastIndex = activeButtons.length -1;
         activeButtons.forEach((b,i)=>{
@@ -148,19 +140,23 @@ async function init() {
             a.className='social-button';
             a.href=b.url;
             a.style.backgroundColor=b.color;
+            a.style.width = `${maxLength}ch`;
             a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
 
-            // Páratlan szám >3: az utolsó gomb abszolút alul középre
+            // Páratlan szám >3: utolsó gomb külön sorban, középre
             if(activeButtons.length %2===1 && i===lastIndex){
-                a.classList.add('absolute-last');
-                container.appendChild(a);
+                const row=document.createElement('div');
+                row.style.display='flex';
+                row.style.justifyContent='center';
+                row.style.marginTop='12px';
+                row.appendChild(a);
+                container.appendChild(row);
             } else {
                 (i%2===0 ? leftCol : rightCol).appendChild(a);
             }
         });
 
-        const row=document.createElement('div');
-        row.className='button-row';
+        const row=document.createElement('div'); row.className='button-row';
         row.appendChild(leftCol);
         row.appendChild(rightCol);
         container.appendChild(row);
@@ -170,7 +166,7 @@ async function init() {
 async function fetchDataFromSlug(slug){
     if(!slug) return null;
     try{
-        const res=await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`, {
+        const res=await fetch(`https://https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`, {
             headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw', Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw'}
         });
         const json=await res.json();
