@@ -3,106 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin - Digitális Névjegy</title>
+<title>Digitális Névjegy Admin</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-body { font-family: Arial, sans-serif; padding:20px; background:#f0f0f0; }
-.card { background:#fff; padding:25px; border-radius:15px; max-width:480px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
-.card h2 { margin-top:0; }
-input, select, button { width:100%; margin:8px 0; padding:10px; font-size:16px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
-button { cursor:pointer; background:#42a5f5; color:#fff; border:none; }
-.color-picker { height:35px; padding:0; }
-#previewBtn { background:#ff9800; margin-top:15px; }
-#link { margin-top:10px; word-break: break-all; }
+body { font-family: Arial, sans-serif; background:#f0f0f0; margin:0; padding:20px; }
+.card { max-width:600px; margin:auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+input, select { width:90%; padding:10px; margin:8px 0; font-size:16px; border-radius:6px; border:1px solid #ccc;}
+label { display:block; margin-top:12px; font-weight:bold;}
+button { padding:12px 20px; font-size:16px; border:none; border-radius:8px; background:#42a5f5; color:#fff; cursor:pointer; margin-top:12px;}
+.preview-btn { background:#4caf50; }
+.logout { background:#ef5350; }
+#link { margin-top:15px; word-break: break-all; font-weight:bold;}
 </style>
 </head>
 <body>
 <div class="card">
-  <h2>Admin Panel</h2>
+  <h2>Digitális Névjegy Admin</h2>
 
-  <input id="fileName" placeholder="Fájlnév / hívónév">
-  <input id="fullName" placeholder="Vezetéknév Keresztnév">
-  <input id="company" placeholder="Cég">
-  <input id="phone" placeholder="Telefon">
-  <input id="email" placeholder="Email">
-  <input id="address" placeholder="Cím">
+  <div id="login-section">
+    <input id="email" placeholder="Admin Email">
+    <input id="password" type="password" placeholder="Jelszó">
+    <button id="loginBtn">Belépés</button>
+  </div>
 
-  <input type="file" id="logoFile" accept="image/*">
-  <input type="file" id="bgFile" accept="image/*">
+  <div id="admin-section" style="display:none;">
+    <label for="filename">Hívónév (slug alap)</label>
+    <input id="filename" placeholder="Pl. john-doe">
 
-  <h4>Gombok</h4>
-  <input id="facebook" placeholder="Facebook felhasználónév">
-  <input type="color" id="facebook_color" class="color-picker" value="#3b5998">
+    <label for="facebook">Facebook felhasználónév</label>
+    <input id="facebook" placeholder="pl. szegedirse">
 
-  <input id="instagram" placeholder="Instagram felhasználónév">
-  <input type="color" id="instagram_color" class="color-picker" value="#E1306C">
+    <label for="instagram">Instagram felhasználónév</label>
+    <input id="instagram">
 
-  <input id="tiktok" placeholder="TikTok felhasználónév">
-  <input type="color" id="tiktok_color" class="color-picker" value="#69C9D0">
+    <label for="tiktok">TikTok felhasználónév</label>
+    <input id="tiktok">
 
-  <input id="website" placeholder="Weboldal / felhasználónév">
-  <input type="color" id="website_color" class="color-picker" value="#000000">
+    <label for="website">Weboldal URL (csak felhasználónév vagy teljes link)</label>
+    <input id="website" placeholder="pl. szegedvolley.com">
 
-  <input id="contacts_label" placeholder="Kapcsolatok felirat">
-  <input type="color" id="contacts_color" class="color-picker" value="#ffffff">
-  <input type="number" id="contacts_size" placeholder="Betűméret (px)" value="20">
+    <label for="emailUser">Email cím</label>
+    <input id="emailUser" placeholder="pl. info@domain.com">
 
-  <button id="previewBtn">Preview</button>
-  <div id="link"></div>
+    <label for="vcf_first">Keresztnév</label>
+    <input id="vcf_first">
+    <label for="vcf_last">Vezetéknév</label>
+    <input id="vcf_last">
+    <label for="vcf_company">Cég</label>
+    <input id="vcf_company">
+    <label for="vcf_phone">Telefonszám</label>
+    <input id="vcf_phone">
+    <label for="vcf_address">Cím</label>
+    <input id="vcf_address">
+
+    <label for="bg_image">Háttérkép</label>
+    <input id="bg_image" type="file">
+
+    <label for="logo_image">Logó</label>
+    <input id="logo_image" type="file">
+
+    <label for="contacts_label">Kapcsolatok felirat</label>
+    <input id="contacts_label">
+
+    <label for="contacts_font">Betűtípus</label>
+    <select id="contacts_font">
+      <option value="Arial">Arial</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Tahoma">Tahoma</option>
+      <option value="Courier New">Courier New</option>
+    </select>
+
+    <label for="contacts_color">Betűszín</label>
+    <input type="color" id="contacts_color" value="#ffffff">
+
+    <label for="contacts_size">Betűméret (px)</label>
+    <input type="number" id="contacts_size" value="24">
+
+    <label for="facebook_color">Facebook gomb színe</label>
+    <input type="color" id="facebook_color" value="#3b5998">
+    <label for="instagram_color">Instagram gomb színe</label>
+    <input type="color" id="instagram_color" value="#E1306C">
+    <label for="tiktok_color">TikTok gomb színe</label>
+    <input type="color" id="tiktok_color" value="#69C9D0">
+    <label for="website_color">Weboldal gomb színe</label>
+    <input type="color" id="website_color" value="#000000">
+    <label for="vcf_color">Névjegy gomb színe</label>
+    <input type="color" id="vcf_color" value="#ff9900">
+    <label for="email_color">Email gomb színe</label>
+    <input type="color" id="email_color" value="#6c63ff">
+
+    <button id="genBtn">Link generálása</button>
+    <button id="previewBtn" class="preview-btn">Preview</button>
+    <button id="logoutBtn" class="logout">Kijelentkezés</button>
+
+    <div id="link"></div>
+  </div>
 </div>
 
-<script>
-function readFileAsDataURL(file){
-    return new Promise((res, rej)=>{
-        const reader=new FileReader();
-        reader.onload=e=>res(e.target.result);
-        reader.onerror=rej;
-        reader.readAsDataURL(file);
-    });
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const supabase = createClient(
+  "https://lvscrtgxcyabjftbsdmm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
+);
+
+const loginSection = document.getElementById('login-section');
+const adminSection = document.getElementById('admin-section');
+
+document.getElementById('loginBtn').onclick = async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const { error, data } = await supabase.auth.signInWithPassword({email,password});
+  if(error){ alert(error.message); return;}
+  loginSection.style.display='none';
+  adminSection.style.display='block';
+};
+
+document.getElementById('logoutBtn').onclick = async () => {
+  await supabase.auth.signOut();
+  location.reload();
+};
+
+function generateSlug(name){
+  return name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+Date.now();
 }
 
-document.getElementById('previewBtn').onclick = async ()=>{
-    const data = {
-        fileName: document.getElementById('fileName').value,
-        fullName: document.getElementById('fullName').value,
-        company: document.getElementById('company').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        address: document.getElementById('address').value,
-        facebook: document.getElementById('facebook').value ? 'https://facebook.com/'+document.getElementById('facebook').value : '',
-        facebook_color: document.getElementById('facebook_color').value,
-        instagram: document.getElementById('instagram').value ? 'https://instagram.com/'+document.getElementById('instagram').value : '',
-        instagram_color: document.getElementById('instagram_color').value,
-        tiktok: document.getElementById('tiktok').value ? 'https://tiktok.com/@'+document.getElementById('tiktok').value : '',
-        tiktok_color: document.getElementById('tiktok_color').value,
-        website: document.getElementById('website').value ? 'https://'+document.getElementById('website').value : '',
-        website_color: document.getElementById('website_color').value,
-        contacts_label: document.getElementById('contacts_label').value,
-        contacts_color: document.getElementById('contacts_color').value,
-        contacts_size: document.getElementById('contacts_size').value
-    };
+document.getElementById('genBtn').onclick = async () => {
+  const filename = document.getElementById('filename').value.trim();
+  if(!filename){ alert("Adj meg egy hívónevet!"); return;}
+  const slug = generateSlug(filename);
 
-    // Logo / háttér képek
-    const logoFile=document.getElementById('logoFile').files[0];
-    if(logoFile) data.logo = await readFileAsDataURL(logoFile);
-    const bgFile=document.getElementById('bgFile').files[0];
-    if(bgFile) data.bg_image = await readFileAsDataURL(bgFile);
-
-    // VCF generálás
-    const vcf = `BEGIN:VCARD
+  // VCF generálása a mezők alapján
+  const vcfData = `BEGIN:VCARD
 VERSION:3.0
-N:${data.fullName || ''};
-FN:${data.fullName || ''}
-ORG:${data.company || ''}
-TEL;TYPE=WORK,VOICE:${data.phone || ''}
-EMAIL;TYPE=PREF,INTERNET:${data.email || ''}
-ADR;TYPE=WORK:${data.address || ''}
+N:${document.getElementById('vcf_last').value};${document.getElementById('vcf_first').value}
+FN:${document.getElementById('vcf_first').value} ${document.getElementById('vcf_last').value}
+ORG:${document.getElementById('vcf_company').value}
+TEL;TYPE=CELL:${document.getElementById('vcf_phone').value}
+ADR;TYPE=WORK:${document.getElementById('vcf_address').value}
+EMAIL;TYPE=INTERNET:${document.getElementById('emailUser').value}
 END:VCARD`;
-    data.vcf = "data:text/vcard;charset=utf-8,"+encodeURIComponent(vcf);
 
-    localStorage.setItem('previewData', JSON.stringify(data));
-    window.open('view.html?preview=true','_blank');
-}
+  const vcfBlob = new Blob([vcfData], {type:'text/vcard'});
+  const vcfFile = new File([vcfBlob], `${slug}.vcf`);
+
+  const files = {
+    logo: document.getElementById('logo_image').files[0] || null,
+    bg: document.getElementById('bg_image').files[0] || null,
+    vcf: vcfFile
+  };
+
+  // Storage feltöltés
+  const uploadedFiles = {};
+  for(const key in files){
+    if(files[key]){
+      const { data, error } = await supabase.storage.from(key==='logo'?'logos':key==='bg'?'backgrounds':'vcf').upload(`${slug}_${files[key].name}`, files[key]);
+      if(error){ alert("Storage hiba: "+error.message); return;}
+      uploadedFiles[key] = data.path;
+    }
+  }
+
+  // Adatok mentése DB-be
+  const profileData = {
+    slug,
+    facebook: document.getElementById('facebook').value,
+    instagram: document.getElementById('instagram').value,
+    tiktok: document.getElementById('tiktok').value,
+    website: document.getElementById('website').value,
+    email: document.getElementById('emailUser').value,
+    vcf: uploadedFiles.vcf,
+    logo: uploadedFiles.logo,
+    bg_image: uploadedFiles.bg,
+    contacts_label: document.getElementById('contacts_label').value,
+    contacts_font: document.getElementById('contacts_font').value,
+    contacts_color: document.getElementById('contacts_color').value,
+    contacts_size: Number(document.getElementById('contacts_size').value),
+    facebook_color: document.getElementById('facebook_color').value,
+    instagram_color: document.getElementById('instagram_color').value,
+    tiktok_color: document.getElementById('tiktok_color').value,
+    website_color: document.getElementById('website_color').value,
+    vcf_color: document.getElementById('vcf_color').value,
+    email_color: document.getElementById('email_color').value
+  };
+
+  const { error } = await supabase.from('profiles').insert([profileData]);
+  if(error){ alert("DB hiba: "+error.message); return;}
+
+  document.getElementById('link').innerHTML = `https://lvscrtgxcyabjftbsdmm.supabase.co/view.html?slug=${slug}`;
+};
+
+// Preview gomb
+document.getElementById('previewBtn').onclick = () => {
+  const previewData = {};
+  ['facebook','instagram','tiktok','website','emailUser','vcf_first','vcf_last','vcf_company','vcf_phone','vcf_address','contacts_label','contacts_font','contacts_color','contacts_size','facebook_color','instagram_color','tiktok_color','website_color','vcf_color','email_color'].forEach(id=>{
+    previewData[id] = document.getElementById(id).value;
+  });
+  localStorage.setItem('previewData', JSON.stringify(previewData));
+  window.open('view.html?preview=true','_blank');
+};
 </script>
 </body>
 </html>
