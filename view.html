@@ -3,192 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Névjegy</title>
-
+<title>Digitális Névjegy</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  color:#fff;
-  text-align:center;
-  background:#000;
-}
-
-.background {
-  position:fixed;
-  width:100%;
-  height:100%;
-  background-size:cover;
-  background-position:center;
-  z-index:-2;
-  filter: blur(6px) brightness(0.8);
-}
-
-.top-logo {
-  width:120px;
-  margin-top:30px;
-  filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
-}
-
-h1 {
-  margin:20px;
-}
-
-.container {
-  max-width:420px;
-  margin:auto;
-  padding:20px;
-  display:grid;
-  gap:14px;
-  justify-content:center;
-}
-
-.btn {
-  padding:14px;
-  border-radius:14px;
-  color:white;
-  text-decoration:none;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-  font-size:18px;
-  white-space:nowrap;
-}
-
-.error {
-  margin-top:100px;
-  font-size:20px;
-}
+html, body { margin:0; padding:0; width:100%; height:100%; font-family:Arial, sans-serif; color:#fff; text-align:center; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:20px; }
+.background { position:fixed; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center; z-index:-2; }
+.top-logo { width:130px; margin:20px 0; filter:drop-shadow(0 0 8px #fff); }
+h1 { font-size:2em; margin-bottom:20px; text-shadow:2px 2px 6px rgba(0,0,0,0.6); }
+.button-container { width:90%; max-width:420px; display:flex; flex-direction:column; gap:16px; }
+.social-button { font-size:18px; padding:14px; border-radius:14px; text-decoration:none; color:#fff; display:flex; align-items:center; justify-content:center; gap:10px; transition:transform .25s, box-shadow .25s; border:2px solid #FF6600; box-shadow:0 4px 12px rgba(0,0,0,0.4); }
+.social-button i { font-size:22px; }
+.social-button:hover { transform:scale(1.08); box-shadow:0 8px 25px rgba(255,102,0,0.6); }
+@media (max-width:600px){ .button-container{ display:grid; grid-template-columns:1fr 1fr; gap:12px; } .social-button{ font-size:16px; padding:12px; } .top-logo{ width:110px; } }
 </style>
 </head>
-
 <body>
-
 <div class="background"></div>
+<img class="top-logo" src="" alt="Logó">
+<h1>Csatlakozz hozzánk!</h1>
+<div class="button-container"></div>
 
-<div id="content">
-  <div class="error">Betöltés...</div>
-</div>
+<script>
+let previewData = null;
+const urlParams = new URLSearchParams(window.location.search);
+const isPreview = urlParams.get('preview') === 'true';
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-const supabase = createClient(
-  "https://lvscrtgxcyabjftbsdmm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
-);
-
-const content = document.getElementById("content");
-
-const params = new URLSearchParams(window.location.search);
-const slug = params.get("slug");
-const isPreview = params.get("preview");
-
-let data;
-
-try {
-
-  if (isPreview) {
-    data = JSON.parse(localStorage.getItem("previewData"));
-  } else {
-
-    if (!slug) {
-      content.innerHTML = '<div class="error">❗ Nincs azonosító</div>';
-      throw new Error("no slug");
-    }
-
-    const { data: dbData, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
-    if (error || !dbData) {
-      content.innerHTML = '<div class="error">❗ Nem található</div>';
-      throw error;
-    }
-
-    data = dbData;
-  }
-
-  if (!data) {
-    content.innerHTML = '<div class="error">❗ Nincs adat</div>';
-    throw new Error("no data");
-  }
-
-  if (data.bg_image) {
-    document.querySelector(".background").style.backgroundImage = `url(${data.bg_image})`;
-  }
-
-  content.innerHTML = `
-    ${data.logo ? `<img src="${data.logo}" class="top-logo">` : ""}
-    <h1>${data.name || ""}</h1>
-    <div class="container" id="buttons"></div>
-  `;
-
-  const container = document.getElementById("buttons");
-
-  function createBtn(label, icon, url, color) {
-    if (!url) return;
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.className = "btn";
-    a.style.background = color || "#333";
-    a.innerHTML = `<i class="${icon}"></i> ${label}`;
-    container.appendChild(a);
-  }
-
-  if (data.vcf || isPreview) {
-  createBtn(
-    data.vcf_label ? data.vcf_label : "Névjegy",
-    "fas fa-address-card",
-    data.vcf || "#",
-    data.vcf_color
-  );
+// 🤖 Preview data localStorage-ból
+if(isPreview){
+    previewData = JSON.parse(localStorage.getItem('previewData') || '{}');
 }
-  createBtn("Facebook", "fab fa-facebook-f", data.facebook, data.facebook_color);
-  createBtn("Instagram", "fab fa-instagram", data.instagram, data.instagram_color);
-  createBtn("TikTok", "fab fa-tiktok", data.tiktok, data.tiktok_color);
-  createBtn("Weboldal", "fas fa-globe", data.website, data.website_color);
 
-  if (data.email) {
-    createBtn("Email", "fas fa-envelope", "mailto:" + data.email, data.email_color);
-  }
+async function init() {
+    const data = previewData || await fetchDataFromSlug(urlParams.get('slug'));
+    if(!data) { console.error("Nincs adat"); return; }
 
-  // GRID LOGIKA
-  const buttons = document.querySelectorAll(".btn");
-  const count = buttons.length;
+    // logó és háttér
+    if(data.bg_image) document.querySelector('.background').style.backgroundImage = `url(${data.bg_image})`;
+    if(data.logo) document.querySelector('.top-logo').src = data.logo;
 
-  if (count <= 3) {
-    container.style.gridTemplateColumns = "1fr";
-  } else {
-    container.style.gridTemplateColumns = "1fr 1fr";
-  }
+    const buttons = [
+        {key:'facebook', label:'Facebook', icon:'fab fa-facebook-f', color:data.facebook_color, url:data.facebook},
+        {key:'instagram', label:'Instagram', icon:'fab fa-instagram', color:data.instagram_color, url:data.instagram},
+        {key:'tiktok', label:'TikTok', icon:'fab fa-tiktok', color:data.tiktok_color, url:data.tiktok},
+        {key:'website', label:'Weboldal', icon:'fas fa-globe', color:data.website_color, url:data.website},
+        {key:'vcf', label:data.vcf_label || 'Névjegy', icon:'fas fa-address-card', color:data.vcf_color, url:data.vcf},
+        {key:'email', label:'Email', icon:'fas fa-envelope', color:data.email_color, url:data.email ? 'mailto:'+data.email : null}
+    ];
 
-  if (count === 5) {
-    buttons[4].style.gridColumn = "span 2";
-    buttons[4].style.justifySelf = "center";
-  }
+    const activeButtons = buttons.filter(b=>b.url);
 
-  // SZÉLESSÉG
-  let maxLength = 6;
-  buttons.forEach(btn => {
-    const len = btn.innerText.length;
-    if (len > maxLength) maxLength = len;
-  });
+    const container = document.querySelector('.button-container');
+    container.innerHTML='';
 
-  const width = maxLength * 10 + 60;
-  buttons.forEach(btn => btn.style.minWidth = width + "px");
-
-} catch (err) {
-  console.error(err);
-  content.innerHTML = '<div class="error">❗ Hiba történt</div>';
+    if(activeButtons.length <= 3){
+        activeButtons.forEach(b=>{
+            const a=document.createElement('a');
+            a.className='social-button';
+            a.href=b.url;
+            a.style.backgroundColor=b.color;
+            a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
+            container.appendChild(a);
+        });
+    }else{
+        // két oszlop
+        const leftCol=document.createElement('div');
+        const rightCol=document.createElement('div');
+        [leftCol,rightCol].forEach(c=>{c.style.display='flex'; c.style.flexDirection='column'; c.style.gap='12px'; c.style.flex='1';});
+        activeButtons.forEach((b,i)=>{
+            const a=document.createElement('a');
+            a.className='social-button';
+            a.href=b.url;
+            a.style.backgroundColor=b.color;
+            a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
+            (i%2===0 ? leftCol:rightCol).appendChild(a);
+        });
+        const row=document.createElement('div');
+        row.style.display='flex';
+        row.style.gap='12px';
+        row.appendChild(leftCol);
+        row.appendChild(rightCol);
+        container.appendChild(row);
+    }
 }
+
+// ha preview, akkor éles fetch helyett localStorage-t használunk
+async function fetchDataFromSlug(slug){
+    if(!slug) return null;
+    try{
+        const res=await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`, {
+            headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw', Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw'}
+        });
+        const json=await res.json();
+        return json[0] || null;
+    }catch(e){ console.error(e); return null; }
+}
+
+init();
 </script>
-
 </body>
 </html>
