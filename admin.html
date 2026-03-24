@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NFC Névjegy Admin</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin</title>
 
-  <style>
-    body { font-family: Arial; text-align:center; padding:40px; background:#f0f0f0; }
-    .card { background:#fff; padding:30px; border-radius:15px; max-width:500px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
-    input { width: 90%; padding:10px; margin:6px 0; font-size:14px; border-radius:8px; border:1px solid #ccc; }
-    button { padding:14px 22px; font-size:16px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; margin-top:10px; }
-    .logout { background:#ef5350; }
-    .copyBtn { background:#4caf50; }
-    label { font-size:14px; display:block; margin-top:10px; }
-  </style>
+<style>
+body { font-family: Arial; text-align:center; padding:40px; background:#f0f0f0; }
+.card { background:#fff; padding:30px; border-radius:15px; max-width:500px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
+input { width:90%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; }
+button { padding:12px 20px; margin-top:10px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; }
+.copyBtn { background:#4caf50; }
+.logout { background:#ef5350; }
+</style>
 </head>
 
 <body>
@@ -22,7 +21,6 @@
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// 🔴 ÁLLÍTSD BE
 const supabase = createClient(
   "https://lvscrtgxcyabjftbsdmm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
@@ -30,33 +28,23 @@ const supabase = createClient(
 
 const app = document.getElementById("app");
 
-// 📁 FILE UPLOAD
-async function uploadFile(file, path) {
-  const { error } = await supabase.storage
-    .from("assets")
-    .upload(path, file, { upsert: true });
-
-  if (error) throw error;
-
-  return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
+function slugify(text) {
+  return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 }
 
-// 🔤 slug
-function slugify(text) {
-  return text.toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/[^\w-]+/g, "");
+async function uploadFile(file, path) {
+  await supabase.storage.from("assets").upload(path, file, { upsert: true });
+  return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
 }
 
 async function init() {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
 
-  // 🔐 LOGIN
   if (!session) {
     app.innerHTML = `
       <div class="card">
-        <h2>Bejelentkezés</h2>
+        <h2>Login</h2>
         <input id="email" placeholder="Email">
         <input id="password" type="password" placeholder="Jelszó">
         <button id="loginBtn">Belépés</button>
@@ -64,27 +52,21 @@ async function init() {
     `;
 
     document.getElementById("loginBtn").onclick = async () => {
-      const emailInput = document.getElementById("email").value;
-      const passwordInput = document.getElementById("password").value;
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailInput,
-        password: passwordInput
+      await supabase.auth.signInWithPassword({
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
       });
-
-      if (error) alert(error.message);
-      else location.reload();
+      location.reload();
     };
 
     return;
   }
 
-  // ✅ ADMIN UI
   app.innerHTML = `
     <div class="card">
-      <h1>Digitális névjegy</h1>
+      <h1>Névjegy generátor</h1>
 
-      <input id="name" placeholder="Név / Cégnév">
+      <input id="name" placeholder="Név">
 
       <input id="facebook" placeholder="Facebook">
       <input id="facebook_color" type="color" value="#3b5998">
@@ -101,20 +83,16 @@ async function init() {
       <input id="emailField" placeholder="Email">
       <input id="email_color" type="color" value="#6c63ff">
 
-      <input id="vcf_label" placeholder="Névjegy gomb felirat (pl. Mentés)">
       <input id="vcf_color" type="color" value="#ff9900">
 
-      <label>Logó</label>
       <input id="logo" type="file">
-
-      <label>Háttérkép</label>
       <input id="bg" type="file">
-
-      <label>VCF fájl</label>
       <input id="vcf" type="file">
 
+      <button id="previewBtn">👁️ Előnézet</button>
       <button id="genBtn">Link generálása</button>
 
+      <div id="previewContainer"></div>
       <div id="link"></div>
 
       <button id="logoutBtn" class="logout">Kijelentkezés</button>
@@ -126,64 +104,74 @@ async function init() {
     location.reload();
   };
 
-  // 🚀 GENERÁLÁS
+  // PREVIEW
+  document.getElementById("previewBtn").onclick = () => {
+    const previewData = {
+      name: document.getElementById("name").value,
+      facebook: document.getElementById("facebook").value,
+      instagram: document.getElementById("instagram").value,
+      tiktok: document.getElementById("tiktok").value,
+      website: document.getElementById("website").value,
+      email: document.getElementById("emailField").value,
+
+      facebook_color: document.getElementById("facebook_color").value,
+      instagram_color: document.getElementById("instagram_color").value,
+      tiktok_color: document.getElementById("tiktok_color").value,
+      website_color: document.getElementById("website_color").value,
+      email_color: document.getElementById("email_color").value,
+      vcf_color: document.getElementById("vcf_color").value
+    };
+
+    localStorage.setItem("previewData", JSON.stringify(previewData));
+
+    document.getElementById("previewContainer").innerHTML = `
+      <iframe src="view.html?preview=true" style="width:100%; height:500px;"></iframe>
+    `;
+  };
+
+  // GENERÁLÁS
   document.getElementById("genBtn").onclick = async () => {
-    try {
-      const name = document.getElementById("name").value;
-      const slug = slugify(name);
 
-      // 📁 FILES
-      const logoFile = document.getElementById("logo").files[0];
-      const bgFile = document.getElementById("bg").files[0];
-      const vcfFile = document.getElementById("vcf").files[0];
+    const name = document.getElementById("name").value;
+    const slug = slugify(name);
 
-      let logoUrl = null;
-      let bgUrl = null;
-      let vcfUrl = null;
+    const logoFile = document.getElementById("logo").files[0];
+    const bgFile = document.getElementById("bg").files[0];
+    const vcfFile = document.getElementById("vcf").files[0];
 
-      if (logoFile) logoUrl = await uploadFile(logoFile, `logos/${slug}.png`);
-      if (bgFile) bgUrl = await uploadFile(bgFile, `backgrounds/${slug}.jpg`);
-      if (vcfFile) vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
+    let logoUrl = null;
+    let bgUrl = null;
+    let vcfUrl = null;
 
-      // 💾 DB mentés
-      const { error } = await supabase.from("profiles").insert({
-        slug,
-        name,
-        logo: logoUrl,
-        bg_image: bgUrl,
-        vcf: vcfUrl,
-        facebook: document.getElementById("facebook").value || null,
-        facebook_color: document.getElementById("facebook_color").value,
-        instagram: document.getElementById("instagram").value || null,
-        instagram_color: document.getElementById("instagram_color").value,
-        tiktok: document.getElementById("tiktok").value || null,
-        tiktok_color: document.getElementById("tiktok_color").value,
-        website: document.getElementById("website").value || null,
-        website_color: document.getElementById("website_color").value,
-        email: document.getElementById("emailField").value || null,
-        email_color: document.getElementById("email_color").value,
-        vcf_color: document.getElementById("vcf_color").value
-      });
+    if (logoFile) logoUrl = await uploadFile(logoFile, `logos/${slug}.png`);
+    if (bgFile) bgUrl = await uploadFile(bgFile, `backgrounds/${slug}.jpg`);
+    if (vcfFile) vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
 
-      if (error) throw error;
+    await supabase.from("profiles").insert({
+      slug,
+      name,
+      logo: logoUrl,
+      bg_image: bgUrl,
+      vcf: vcfUrl,
+      facebook: document.getElementById("facebook").value,
+      facebook_color: document.getElementById("facebook_color").value,
+      instagram: document.getElementById("instagram").value,
+      instagram_color: document.getElementById("instagram_color").value,
+      tiktok: document.getElementById("tiktok").value,
+      tiktok_color: document.getElementById("tiktok_color").value,
+      website: document.getElementById("website").value,
+      website_color: document.getElementById("website_color").value,
+      email: document.getElementById("emailField").value,
+      email_color: document.getElementById("email_color").value,
+      vcf_color: document.getElementById("vcf_color").value
+    });
 
-      const url = `https://hegedustamas72.github.io/nevjegykartya/view.html?slug=${slug}`;
+    const url = `https://hegedustamas72.github.io/nevjegykartya/view.html?slug=${slug}`;
 
-      document.getElementById("link").innerHTML = `
-        <p><b>Link:</b></p>
-        <input id="copyField" value="${url}" readonly style="width:100%">
-        <button id="copyBtn" class="copyBtn">📋 Másolás</button>
-      `;
-
-      document.getElementById("copyBtn").onclick = async () => {
-        await navigator.clipboard.writeText(url);
-        alert("Kimásolva!");
-      };
-
-    } catch (err) {
-      console.error(err);
-      alert("Hiba: " + err.message);
-    }
+    document.getElementById("link").innerHTML = `
+      <input value="${url}" style="width:100%">
+      <button onclick="navigator.clipboard.writeText('${url}')" class="copyBtn">Másolás</button>
+    `;
   };
 }
 
