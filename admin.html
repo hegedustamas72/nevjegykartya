@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin</title>
+<title>Admin - Digitális Névjegy</title>
 <style>
 body { font-family: Arial; text-align:center; padding:20px; background:#f0f0f0; }
 .card { background:#fff; padding:30px; border-radius:15px; max-width:520px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25); }
@@ -30,14 +30,9 @@ const supabase = createClient(
 
 const app = document.getElementById("app");
 
-// biztonságos slug
-function slugify(text) {
-  if (!text) return "";
-  return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
-}
+function slugify(text){ return text ? text.toLowerCase().replace(/ /g,'-').replace(/[^\w-]+/g,'') : ''; }
 
-// minden input összegyűjtése
-function getFormData() {
+function getFormData(){
   return {
     name: document.getElementById("name")?.value || "",
     facebook: document.getElementById("facebook")?.value || "",
@@ -55,8 +50,7 @@ function getFormData() {
   };
 }
 
-// username → link
-function buildLinks(data) {
+function buildLinks(data){
   return {
     facebook: data.facebook ? `https://facebook.com/${data.facebook}` : null,
     instagram: data.instagram ? `https://instagram.com/${data.instagram}` : null,
@@ -65,21 +59,16 @@ function buildLinks(data) {
   };
 }
 
-// file feltöltés Storage-ba
-async function uploadFile(file, path) {
-  if (!file) return null;
-  const { error } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
-  if (error) {
-    console.error(error);
-    alert("Feltöltési hiba!");
-    return null;
-  }
+async function uploadFile(file, path){
+  if(!file) return null;
+  const { error } = await supabase.storage.from("assets").upload(path, file, { upsert:true });
+  if(error){ console.error(error); alert("Feltöltési hiba!"); return null; }
   return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
 }
 
-async function init() {
+async function init(){
   const { data } = await supabase.auth.getSession();
-  if (!data.session) {
+  if(!data.session){
     app.innerHTML = `
       <div class="card">
         <h2>Login</h2>
@@ -88,18 +77,16 @@ async function init() {
         <button id="loginBtn">Belépés</button>
       </div>
     `;
-    document.getElementById("loginBtn").onclick = async () => {
+    document.getElementById("loginBtn").onclick = async ()=>{
       const { error } = await supabase.auth.signInWithPassword({
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value
+        email:document.getElementById("email").value,
+        password:document.getElementById("password").value
       });
-      if (error) alert(error.message);
-      else location.reload();
+      if(error) alert(error.message); else location.reload();
     };
     return;
   }
 
-  // admin UI
   app.innerHTML = `
     <div class="card">
       <h1>Névjegy generátor</h1>
@@ -121,31 +108,27 @@ async function init() {
     </div>
   `;
 
-  document.getElementById("logoutBtn").onclick = async () => { await supabase.auth.signOut(); location.reload(); };
+  document.getElementById("logoutBtn").onclick = async ()=>{await supabase.auth.signOut(); location.reload();};
 
-  // 👁️ Preview
-  document.getElementById("previewBtn").onclick = () => {
+  document.getElementById("previewBtn").onclick = ()=>{
     const data = getFormData();
     const links = buildLinks(data);
-
-    // blob URL-ek preview-hoz
     const logoFile = document.getElementById("logo").files[0];
     const bgFile = document.getElementById("bg").files[0];
     const vcfFile = document.getElementById("vcf").files[0];
 
-    const previewData = { ...data, ...links };
-    if (logoFile) previewData.logo = URL.createObjectURL(logoFile);
-    if (bgFile) previewData.bg_image = URL.createObjectURL(bgFile);
-    if (vcfFile) previewData.vcf = URL.createObjectURL(vcfFile);
+    const previewData = {...data, ...links};
+    if(logoFile) previewData.logo = URL.createObjectURL(logoFile);
+    if(bgFile) previewData.bg_image = URL.createObjectURL(bgFile);
+    if(vcfFile) previewData.vcf = URL.createObjectURL(vcfFile);
 
     localStorage.setItem("previewData", JSON.stringify(previewData));
     document.getElementById("previewContainer").innerHTML = `<iframe src="view.html?preview=true" style="width:100%; height:500px; border:none;"></iframe>`;
   };
 
-  // 🚀 Generálás
-  document.getElementById("genBtn").onclick = async () => {
+  document.getElementById("genBtn").onclick = async ()=>{
     const data = getFormData();
-    if (!data.name) { alert("A név kötelező!"); return; }
+    if(!data.name){ alert("A név kötelező!"); return; }
     const slug = slugify(data.name) + "-" + Date.now();
     const links = buildLinks(data);
 
@@ -158,15 +141,14 @@ async function init() {
     const vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
 
     const { error } = await supabase.from("profiles").insert({
-      slug, name: data.name,
-      logo: logoUrl, bg_image: bgUrl, vcf: vcfUrl, vcf_label: data.vcf_label,
+      slug, name:data.name, logo:logoUrl, bg_image:bgUrl, vcf:vcfUrl, vcf_label:data.vcf_label,
       ...links,
-      facebook_color: data.facebook_color, instagram_color: data.instagram_color,
-      tiktok_color: data.tiktok_color, website_color: data.website_color,
-      email: data.email, email_color: data.email_color, vcf_color: data.vcf_color
+      facebook_color:data.facebook_color, instagram_color:data.instagram_color,
+      tiktok_color:data.tiktok_color, website_color:data.website_color,
+      email:data.email, email_color:data.email_color, vcf_color:data.vcf_color
     });
 
-    if (error) { console.error(error); alert("Mentési hiba!"); return; }
+    if(error){ console.error(error); alert("Mentési hiba!"); return; }
 
     const url = `https://hegedustamas72.github.io/nevjegykartya/view.html?slug=${slug}`;
     document.getElementById("link").innerHTML = `<input value="${url}" style="width:100%"><button onclick="navigator.clipboard.writeText('${url}')" class="copyBtn">Másolás</button>`;
