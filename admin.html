@@ -6,12 +6,7 @@
 <title>Admin</title>
 
 <style>
-body {
-  font-family: Arial;
-  text-align:center;
-  padding:40px;
-  background:#f0f0f0;
-}
+body { font-family: Arial; text-align:center; padding:40px; background:#f0f0f0; }
 
 .card {
   background:#fff;
@@ -28,21 +23,23 @@ input {
   margin:6px 0;
   border-radius:8px;
   border:1px solid #ccc;
-  font-size:14px;
 }
 
-/* ✅ FIX: color picker látható legyen */
 input[type="color"] {
   height:40px;
-  padding:5px;
   cursor:pointer;
+}
+
+label {
+  display:block;
+  margin-top:10px;
+  font-weight:bold;
 }
 
 .row {
   display:flex;
   gap:10px;
   justify-content:center;
-  align-items:center;
 }
 
 .row input[type="text"] {
@@ -61,7 +58,6 @@ button {
 
 .copyBtn { background:#4caf50; }
 .logout { background:#ef5350; }
-
 </style>
 </head>
 
@@ -78,31 +74,19 @@ const supabase = createClient(
 
 const app = document.getElementById("app");
 
-// 🔤 slug
 function slugify(text) {
   return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 }
 
-// 🔗 USERNAME → LINK
 function buildLinks() {
   return {
-    facebook: document.getElementById("facebook").value 
-      ? "https://facebook.com/" + document.getElementById("facebook").value
-      : null,
-
-    instagram: document.getElementById("instagram").value
-      ? "https://instagram.com/" + document.getElementById("instagram").value
-      : null,
-
-    tiktok: document.getElementById("tiktok").value
-      ? "https://tiktok.com/@" + document.getElementById("tiktok").value
-      : null,
-
-    website: document.getElementById("website").value || null
+    facebook: facebook.value ? "https://facebook.com/" + facebook.value : null,
+    instagram: instagram.value ? "https://instagram.com/" + instagram.value : null,
+    tiktok: tiktok.value ? "https://tiktok.com/@" + tiktok.value : null,
+    website: website.value || null
   };
 }
 
-// 📁 upload
 async function uploadFile(file, path) {
   await supabase.storage.from("assets").upload(path, file, { upsert:true });
   return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
@@ -111,9 +95,8 @@ async function uploadFile(file, path) {
 async function init() {
 
   const { data } = await supabase.auth.getSession();
-  const session = data.session;
 
-  if (!session) {
+  if (!data.session) {
     app.innerHTML = `
       <div class="card">
         <h2>Login</h2>
@@ -123,14 +106,13 @@ async function init() {
       </div>
     `;
 
-    document.getElementById("loginBtn").onclick = async () => {
+    loginBtn.onclick = async () => {
       await supabase.auth.signInWithPassword({
         email: email.value,
         password: password.value
       });
       location.reload();
     };
-
     return;
   }
 
@@ -156,7 +138,7 @@ async function init() {
       </div>
 
       <div class="row">
-        <input id="website" placeholder="Weboldal (teljes link)">
+        <input id="website" placeholder="Weboldal">
         <input id="website_color" type="color" value="#000000">
       </div>
 
@@ -165,12 +147,16 @@ async function init() {
         <input id="email_color" type="color" value="#6c63ff">
       </div>
 
-      <!-- ✅ NÉVJEGY FELIRAT -->
-      <input id="vcf_label" placeholder="Névjegy gomb felirat (pl. Mentés)">
+      <input id="vcf_label" placeholder="Névjegy gomb felirat">
       <input id="vcf_color" type="color" value="#ff9900">
 
+      <label>Logó</label>
       <input id="logo" type="file">
+
+      <label>Háttérkép</label>
       <input id="bg" type="file">
+
+      <label>Névjegy (.vcf)</label>
       <input id="vcf" type="file">
 
       <button id="previewBtn">👁️ Előnézet</button>
@@ -183,19 +169,15 @@ async function init() {
     </div>
   `;
 
-  document.getElementById("logoutBtn").onclick = async () => {
+  logoutBtn.onclick = async () => {
     await supabase.auth.signOut();
     location.reload();
   };
 
-  // 👁️ PREVIEW
-  document.getElementById("previewBtn").onclick = () => {
-
-    const links = buildLinks();
-
+  previewBtn.onclick = () => {
     const previewData = {
       name: name.value,
-      ...links,
+      ...buildLinks(),
       email: emailField.value,
       vcf_label: vcf_label.value,
 
@@ -214,11 +196,9 @@ async function init() {
     `;
   };
 
-  // 🚀 GENERÁLÁS
-  document.getElementById("genBtn").onclick = async () => {
+  genBtn.onclick = async () => {
 
     const slug = slugify(name.value);
-    const links = buildLinks();
 
     let logoUrl = null;
     let bgUrl = null;
@@ -236,7 +216,7 @@ async function init() {
       vcf: vcfUrl,
       vcf_label: vcf_label.value,
 
-      ...links,
+      ...buildLinks(),
 
       facebook_color: facebook_color.value,
       instagram_color: instagram_color.value,
