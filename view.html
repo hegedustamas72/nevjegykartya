@@ -26,19 +26,14 @@ body {
   filter: blur(6px) brightness(0.8);
 }
 
-/* overlay kikapcsolva */
-.overlay { display:none; }
-
 .top-logo {
   width:120px;
   margin-top:30px;
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
-  animation: fadeIn 0.6s ease;
 }
 
 h1 {
   margin:20px;
-  animation: fadeIn 0.6s ease;
 }
 
 .container {
@@ -61,22 +56,11 @@ h1 {
   gap:10px;
   font-size:18px;
   white-space:nowrap;
-  transition: transform .2s, box-shadow .2s;
-}
-
-.btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
 }
 
 .error {
   margin-top:100px;
   font-size:20px;
-}
-
-@keyframes fadeIn {
-  from {opacity:0;}
-  to {opacity:1;}
 }
 </style>
 </head>
@@ -130,12 +114,15 @@ try {
     data = dbData;
   }
 
-  // háttér
+  if (!data) {
+    content.innerHTML = '<div class="error">❗ Nincs adat</div>';
+    throw new Error("no data");
+  }
+
   if (data.bg_image) {
     document.querySelector(".background").style.backgroundImage = `url(${data.bg_image})`;
   }
 
-  // UI
   content.innerHTML = `
     ${data.logo ? `<img src="${data.logo}" class="top-logo">` : ""}
     <h1>${data.name || ""}</h1>
@@ -155,7 +142,7 @@ try {
     container.appendChild(a);
   }
 
-  createBtn(data.vcf_label || "Névjegy", ...
+  createBtn(data.vcf_label ? data.vcf_label : "Névjegy", "fas fa-address-card", data.vcf, data.vcf_color);
   createBtn("Facebook", "fab fa-facebook-f", data.facebook, data.facebook_color);
   createBtn("Instagram", "fab fa-instagram", data.instagram, data.instagram_color);
   createBtn("TikTok", "fab fa-tiktok", data.tiktok, data.tiktok_color);
@@ -165,7 +152,7 @@ try {
     createBtn("Email", "fas fa-envelope", "mailto:" + data.email, data.email_color);
   }
 
-  // 🎯 GRID LOGIKA
+  // GRID LOGIKA
   const buttons = document.querySelectorAll(".btn");
   const count = buttons.length;
 
@@ -180,7 +167,7 @@ try {
     buttons[4].style.justifySelf = "center";
   }
 
-  // 🎯 szélesség
+  // SZÉLESSÉG
   let maxLength = 6;
   buttons.forEach(btn => {
     const len = btn.innerText.length;
