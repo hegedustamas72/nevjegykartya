@@ -39,7 +39,6 @@ label {
 .row {
   display:flex;
   gap:10px;
-  justify-content:center;
 }
 
 .row input[type="text"] {
@@ -74,21 +73,56 @@ const supabase = createClient(
 
 const app = document.getElementById("app");
 
+// 🔤 slug biztonságosan
 function slugify(text) {
+  if (!text) return "";
   return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 }
 
-function buildLinks() {
+// 📥 összes input begyűjtése
+function getFormData() {
   return {
-    facebook: facebook.value ? "https://facebook.com/" + facebook.value : null,
-    instagram: instagram.value ? "https://instagram.com/" + instagram.value : null,
-    tiktok: tiktok.value ? "https://tiktok.com/@" + tiktok.value : null,
-    website: website.value || null
+    name: document.getElementById("name")?.value || "",
+    facebook: document.getElementById("facebook")?.value || "",
+    instagram: document.getElementById("instagram")?.value || "",
+    tiktok: document.getElementById("tiktok")?.value || "",
+    website: document.getElementById("website")?.value || "",
+    email: document.getElementById("emailField")?.value || "",
+    vcf_label: document.getElementById("vcf_label")?.value || "Névjegy",
+
+    facebook_color: document.getElementById("facebook_color")?.value,
+    instagram_color: document.getElementById("instagram_color")?.value,
+    tiktok_color: document.getElementById("tiktok_color")?.value,
+    website_color: document.getElementById("website_color")?.value,
+    email_color: document.getElementById("email_color")?.value,
+    vcf_color: document.getElementById("vcf_color")?.value
   };
 }
 
+// 🔗 username → link
+function buildLinks(data) {
+  return {
+    facebook: data.facebook ? `https://facebook.com/${data.facebook}` : null,
+    instagram: data.instagram ? `https://instagram.com/${data.instagram}` : null,
+    tiktok: data.tiktok ? `https://tiktok.com/@${data.tiktok}` : null,
+    website: data.website || null
+  };
+}
+
+// 📁 file upload
 async function uploadFile(file, path) {
-  await supabase.storage.from("assets").upload(path, file, { upsert:true });
+  if (!file) return null;
+
+  const { error } = await supabase.storage
+    .from("assets")
+    .upload(path, file, { upsert: true });
+
+  if (error) {
+    console.error(error);
+    alert("Feltöltési hiba!");
+    return null;
+  }
+
   return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}`;
 }
 
@@ -106,10 +140,10 @@ async function init() {
       </div>
     `;
 
-    loginBtn.onclick = async () => {
+    document.getElementById("loginBtn").onclick = async () => {
       await supabase.auth.signInWithPassword({
-        email: email.value,
-        password: password.value
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
       });
       location.reload();
     };
@@ -118,7 +152,7 @@ async function init() {
 
   app.innerHTML = `
     <div class="card">
-      <h1>Névjegy</h1>
+      <h1>Névjegy generátor</h1>
 
       <input id="name" placeholder="Név">
 
@@ -169,67 +203,76 @@ async function init() {
     </div>
   `;
 
-  logoutBtn.onclick = async () => {
+  document.getElementById("logoutBtn").onclick = async () => {
     await supabase.auth.signOut();
     location.reload();
   };
 
-  previewBtn.onclick = () => {
-    const previewData = {
-      name: name.value,
-      ...buildLinks(),
-      email: emailField.value,
-      vcf_label: vcf_label.value,
+  // 👁️ PREVIEW
+  document.getElementById("previewBtn").onclick = () => {
 
-      facebook_color: facebook_color.value,
-      instagram_color: instagram_color.value,
-      tiktok_color: tiktok_color.value,
-      website_color: website_color.value,
-      email_color: email_color.value,
-      vcf_color: vcf_color.value
-    };
+    const data = getFormData();
+    const links = buildLinks(data);
 
-    localStorage.setItem("previewData", JSON.stringify(previewData));
+    localStorage.setItem("previewData", JSON.stringify({
+      ...data,
+      ...links
+    }));
 
-    previewContainer.innerHTML = `
+    document.getElementById("previewContainer").innerHTML = `
       <iframe src="view.html?preview=true" style="width:100%; height:500px;"></iframe>
     `;
   };
 
-  genBtn.onclick = async () => {
+  // 🚀 GENERÁLÁS
+  document.getElementById("genBtn").onclick = async () => {
 
-    const slug = slugify(name.value);
+    const data = getFormData();
 
-    let logoUrl = null;
-    let bgUrl = null;
-    let vcfUrl = null;
+    if (!data.name) {
+      alert("A név kötelező!");
+      return;
+    }
 
-    if (logo.files[0]) logoUrl = await uploadFile(logo.files[0], `logos/${slug}.png`);
-    if (bg.files[0]) bgUrl = await uploadFile(bg.files[0], `backgrounds/${slug}.jpg`);
-    if (vcf.files[0]) vcfUrl = await uploadFile(vcf.files[0], `vcf/${slug}.vcf`);
+    const slug = slugify(data.name);
+    const links = buildLinks(data);
 
-    await supabase.from("profiles").insert({
+    const logoFile = document.getElementById("logo").files[0];
+    const bgFile = document.getElementById("bg").files[0];
+    const vcfFile = document.getElementById("vcf").files[0];
+
+    const logoUrl = await uploadFile(logoFile, `logos/${slug}.png`);
+    const bgUrl = await uploadFile(bgFile, `backgrounds/${slug}.jpg`);
+    const vcfUrl = await uploadFile(vcfFile, `vcf/${slug}.vcf`);
+
+    const { error } = await supabase.from("profiles").insert({
       slug,
-      name: name.value,
+      name: data.name,
       logo: logoUrl,
       bg_image: bgUrl,
       vcf: vcfUrl,
-      vcf_label: vcf_label.value,
+      vcf_label: data.vcf_label,
 
-      ...buildLinks(),
+      ...links,
 
-      facebook_color: facebook_color.value,
-      instagram_color: instagram_color.value,
-      tiktok_color: tiktok_color.value,
-      website_color: website_color.value,
-      email: emailField.value,
-      email_color: email_color.value,
-      vcf_color: vcf_color.value
+      facebook_color: data.facebook_color,
+      instagram_color: data.instagram_color,
+      tiktok_color: data.tiktok_color,
+      website_color: data.website_color,
+      email: data.email,
+      email_color: data.email_color,
+      vcf_color: data.vcf_color
     });
+
+    if (error) {
+      console.error(error);
+      alert("Mentési hiba!");
+      return;
+    }
 
     const url = `https://hegedustamas72.github.io/nevjegykartya/view.html?slug=${slug}`;
 
-    link.innerHTML = `
+    document.getElementById("link").innerHTML = `
       <input value="${url}" style="width:100%">
       <button onclick="navigator.clipboard.writeText('${url}')" class="copyBtn">Másolás</button>
     `;
