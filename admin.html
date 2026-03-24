@@ -190,7 +190,7 @@ END:VCARD`;
   const { error } = await supabase.from('profiles').insert([profileData]);
   if(error){ alert("DB hiba: "+error.message); return;}
 
-  document.getElementById('link').innerHTML = `https://lvscrtgxcyabjftbsdmm.supabase.co/view.html?slug=${slug}`;
+  document.getElementById('link').innerHTML = `https://hegedustamas72.github.io/nevjegykartya/view.html?slug=${slug}`;
 };
 
 // Preview gomb
