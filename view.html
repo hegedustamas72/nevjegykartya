@@ -3,149 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Digitális Névjegy</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<title>Névjegy</title>
 <style>
-html, body {
-  margin:0; padding:0;
-  width:100%; height:100%;
-  font-family:Arial, sans-serif;
-  color:#fff;
-  overflow:hidden;
-}
-body {
-  display:flex; flex-direction:column;
-  justify-content:center; align-items:center;
-  text-align:center;
-  background:#000;
-}
-.background {
-  position:fixed; top:0; left:0;
-  width:100%; height:100%;
-  background-size:cover; background-position:center;
-  z-index:-2;
-}
-.top-logo { width:130px; margin:20px 0; filter:drop-shadow(0 0 8px #fff); }
-.content-wrapper {
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  min-height:100vh; width:100%; padding:20px; box-sizing:border-box;
-}
-h1 { font-size:2em; margin-bottom:20px; text-shadow:2px 2px 6px rgba(0,0,0,0.6); }
-#contacts-label { margin-bottom:16px; }
-.button-container { display:flex; flex-direction:column; gap:16px; width:90%; max-width:420px; }
-.button-row { display:flex; gap:12px; justify-content:center; width:100%; }
-.social-button {
-  font-size:18px; padding:14px;
-  border-radius:14px; text-decoration:none;
-  color:#fff; display:flex; align-items:center;
-  justify-content:center; gap:10px;
-  transition:transform .25s, box-shadow .25s;
-  box-shadow:0 4px 12px rgba(0,0,0,0.4);
-}
-.social-button i { font-size:22px; }
-.social-button:hover { transform:scale(1.08); box-shadow:0 8px 25px rgba(255,255,255,0.6); }
-@media (max-width:600px){
-  .button-container{ gap:12px;}
-  .social-button{ font-size:16px; padding:12px;}
-  .top-logo{ width:110px;}
-}
+body{margin:0;color:#fff;font-family:Arial;text-align:center}
+.bg{position:fixed;width:100%;height:100%;background-size:cover;z-index:-1}
+.logo{width:120px;margin:20px}
+.wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
+.grid{width:90%;max-width:400px}
+.row{display:flex;gap:10px;margin-bottom:10px}
+.btn{flex:1;padding:14px;border-radius:12px;color:#fff;text-decoration:none}
+.center{display:flex;justify-content:center}
 </style>
 </head>
 <body>
-<div class="background"></div>
-<div class="content-wrapper">
-  <img class="top-logo" src="" alt="Logó">
-  <h1 id="contacts-label">Kapcsolatok</h1>
-  <div class="button-container"></div>
+
+<div class="bg"></div>
+<div class="wrap">
+<img class="logo">
+<h2 id="label"></h2>
+<div class="grid" id="grid"></div>
 </div>
 
 <script>
-let previewData = null;
-const urlParams = new URLSearchParams(window.location.search);
-const isPreview = urlParams.get('preview')==='true';
-if(isPreview){
-  previewData = JSON.parse(localStorage.getItem('previewData')||'{}');
+const params=new URLSearchParams(location.search);
+const preview=params.get('preview')==='true';
+
+let data=null;
+
+async function load(){
+if(preview){
+data=JSON.parse(localStorage.getItem('previewData'));
+}else{
+const res=await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${params.get('slug')}`,{
+headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw',Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw'}
+});
+data=(await res.json())[0];
 }
 
-async function init(){
-  const data = previewData || await fetchData(urlParams.get('slug'));
-  if(!data) return console.error("Nincs adat");
+if(data.bg_image) document.querySelector('.bg').style.backgroundImage=`url(${data.bg_image})`;
+if(data.logo) document.querySelector('.logo').src=data.logo;
 
-  if(data.bg_image) document.querySelector('.background').style.backgroundImage = `url(${data.bg_image})`;
-  if(data.logo) document.querySelector('.top-logo').src = data.logo;
+const label=document.getElementById('label');
+label.innerText=data.contacts_label||'Kapcsolatok';
+label.style.color=data.contacts_color;
+label.style.fontFamily=data.contacts_font;
+label.style.fontSize=data.contacts_size+'px';
 
-  const contactsLabel = document.getElementById('contacts-label');
-  contactsLabel.textContent = data.contacts_label || 'Kapcsolatok';
-  contactsLabel.style.fontFamily = data.contacts_font || 'Arial';
-  contactsLabel.style.color = data.contacts_color || '#ffffff';
-  contactsLabel.style.fontSize = (data.contacts_size||24)+'px';
+const order=['facebook','instagram','tiktok','website','vcf','email'];
 
-  const buttonsOrder = ['facebook','instagram','tiktok','website','vcf','email'];
-  const buttonsData = {
-    facebook: {label:'Facebook', icon:'fab fa-facebook-f', color:data.facebook_color, url:data.facebook},
-    instagram: {label:'Instagram', icon:'fab fa-instagram', color:data.instagram_color, url:data.instagram},
-    tiktok: {label:'TikTok', icon:'fab fa-tiktok', color:data.tiktok_color, url:data.tiktok},
-    website: {label:'Web', icon:'fas fa-globe', color:data.website_color, url:data.website},
-    vcf: {label:data.vcf_label || 'Névjegy', icon:'fas fa-address-card', color:data.vcf_color, url:data.vcf},
-    email: {label:'Email', icon:'fas fa-envelope', color:data.email_color, url:data.email ? 'mailto:'+data.email : null}
-  };
+const map={
+facebook:['Facebook',data.facebook,data.facebook_color],
+instagram:['Instagram',data.instagram,data.instagram_color],
+tiktok:['TikTok',data.tiktok,data.tiktok_color],
+website:['Web',data.website,data.website_color],
+vcf:['Névjegy',data.vcf,data.vcf_color],
+email:['Email',data.email?`mailto:${data.email}`:null,data.email_color]
+};
 
-  const activeButtons = buttonsOrder.map(k=>buttonsData[k]).filter(b=>b.url);
-  const container = document.querySelector('.button-container');
-  container.innerHTML='';
+const active=order.map(k=>({k,...Object.fromEntries([['label',map[k][0]],['url',map[k][1]],['color',map[k][2]]])}))
+.filter(b=>b.url);
 
-  if(activeButtons.length<=3){
-    activeButtons.forEach(b=>{ appendButton(container,b); });
-  } else {
-    // Kéthasábos elrendezés
-    const leftCol=document.createElement('div');
-    const rightCol=document.createElement('div');
-    [leftCol,rightCol].forEach(c=>{c.style.display='flex'; c.style.flexDirection='column'; c.style.gap='12px'; c.style.flex='1';});
+const grid=document.getElementById('grid');
 
-    const lastIndex = activeButtons.length-1;
-    activeButtons.forEach((b,i)=>{
-      const btn = createButton(b);
-      if(activeButtons.length%2===1 && i===lastIndex){
-        const row=document.createElement('div');
-        row.style.display='flex'; row.style.justifyContent='center'; row.style.width='100%'; row.style.marginTop='12px';
-        row.appendChild(btn);
-        container.appendChild(row);
-      } else (i%2===0 ? leftCol : rightCol).appendChild(btn);
-    });
+if(active.length<=3){
+active.forEach(b=>grid.appendChild(btn(b)));
+}else{
 
-    const row=document.createElement('div');
-    row.className='button-row';
-    row.appendChild(leftCol);
-    row.appendChild(rightCol);
-    container.appendChild(row);
-  }
+const lastOdd = active.length%2===1 ? active.pop() : null;
 
-  function appendButton(parent,b){
-    const a=createButton(b);
-    parent.appendChild(a);
-  }
-  function createButton(b){
-    const a=document.createElement('a');
-    a.className='social-button';
-    a.href=b.url; a.style.backgroundColor=b.color;
-    a.innerHTML=`<i class="${b.icon}"></i> ${b.label}`;
-    return a;
-  }
+for(let i=0;i<active.length;i+=2){
+const row=document.createElement('div');
+row.className='row';
+row.appendChild(btn(active[i]));
+if(active[i+1]) row.appendChild(btn(active[i+1]));
+grid.appendChild(row);
 }
 
-async function fetchData(slug){
-  if(!slug) return null;
-  try{
-    const res=await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`,{
-      headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw', Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw'}
-    });
-    const json=await res.json();
-    return json[0]||null;
-  }catch(e){ console.error(e); return null;}
+if(lastOdd){
+const c=document.createElement('div');
+c.className='center';
+c.appendChild(btn(lastOdd));
+grid.appendChild(c);
+}
 }
 
-init();
+function btn(b){
+const a=document.createElement('a');
+a.className='btn';
+a.href=b.url;
+a.style.background=b.color;
+a.innerText=b.label;
+return a;
+}
+}
+
+load();
 </script>
 </body>
 </html>
