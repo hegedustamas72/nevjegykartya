@@ -4,211 +4,127 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Digitális Névjegy Admin</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
-.card { background: #fff; padding: 30px; border-radius: 15px; max-width: 600px; margin:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25);}
-input, select { width: 90%; padding: 10px; margin: 8px 0; font-size:16px; border-radius:8px; border:1px solid #ccc; }
-button { padding: 12px 20px; font-size:16px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; margin-top:10px; }
-button.preview { background:#ff9900; }
-button.copyBtn { background:#4caf50; }
-.logout { background:#ef5350; }
-.file-input { margin:10px 0; }
-.color-picker { width:60px; height:30px; border:none; cursor:pointer; vertical-align:middle; }
-h2 { margin-bottom: 15px; }
-hr { margin:20px 0; }
+body { font-family:Arial,sans-serif; padding:20px; background:#f4f4f4; }
+.card { background:#fff; padding:20px; border-radius:12px; max-width:500px; margin:auto; box-shadow:0 4px 15px rgba(0,0,0,0.2);}
+input, select { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;}
+button { padding:12px 20px; border:none; border-radius:8px; background:#42a5f5; color:#fff; cursor:pointer; margin-top:10px;}
 </style>
 </head>
 <body>
 <div class="card">
 <h2>Digitális Névjegy Admin</h2>
 
-<!-- Slug / Fájlnév -->
-<input id="slug" placeholder="Fájlnév / Slug">
+<label>Hívónév (slughez)</label>
+<input id="name" placeholder="Pl.: csapat">
 
-<hr>
+<label>Facebook</label>
+<input id="facebook" placeholder="felhasználónév">
+<label>Gomb színe</label>
+<input type="color" id="facebook_color" value="#3b5998">
 
-<!-- Névjegy mezők -->
+<label>Instagram</label>
+<input id="instagram" placeholder="felhasználónév">
+<label>Gomb színe</label>
+<input type="color" id="instagram_color" value="#E1306C">
+
+<label>TikTok</label>
+<input id="tiktok" placeholder="felhasználónév">
+<label>Gomb színe</label>
+<input type="color" id="tiktok_color" value="#69C9D0">
+
+<label>Weboldal</label>
+<input id="website" placeholder="pl.: example.com">
+<label>Gomb színe</label>
+<input type="color" id="website_color" value="#000000">
+
+<label>Email</label>
+<input id="email" placeholder="valaki@domain.com">
+<label>Gomb színe</label>
+<input type="color" id="email_color" value="#6c63ff">
+
+<label>Kapcsolatok felirat</label>
+<input id="contacts_label" placeholder="Pl.: Kapcsolatok">
+<label>Betűméret (px)</label>
+<input type="number" id="contacts_font_size" value="24">
+<label>Betűszín</label>
+<input type="color" id="contacts_color" value="#ffffff">
+
+<label>Logó feltöltés</label>
+<input type="file" id="logo_file">
+<label>Háttér feltöltés</label>
+<input type="file" id="bg_file">
+
+<label>VCF Adatok</label>
 <input id="first_name" placeholder="Keresztnév">
 <input id="last_name" placeholder="Vezetéknév">
 <input id="company" placeholder="Cég">
-<input id="address" placeholder="Cím">
 <input id="phone" placeholder="Telefonszám">
-<input id="email" placeholder="Email">
+<input id="vcf_email" placeholder="Email">
+<input id="address" placeholder="Cím">
 
-<hr>
+<button id="genBtn">Link generálása</button>
 
-<!-- Fájlok -->
-<div>
-<label>Logó feltöltés:</label><br>
-<input type="file" id="logo_file" class="file-input" accept="image/*">
-</div>
-<div>
-<label>Háttérkép feltöltés:</label><br>
-<input type="file" id="bg_file" class="file-input" accept="image/*">
-</div>
-
-<hr>
-
-<!-- Gombok -->
-<div>
-<label>Facebook felhasználónév:</label>
-<input id="facebook_user" placeholder="pl. szegedirse">
-<input type="color" id="facebook_color" class="color-picker" value="#3b5998">
-
-<label>Instagram felhasználónév:</label>
-<input id="instagram_user" placeholder="pl. szegedirse">
-<input type="color" id="instagram_color" class="color-picker" value="#E1306C">
-
-<label>TikTok felhasználónév:</label>
-<input id="tiktok_user" placeholder="pl. szegedirse">
-<input type="color" id="tiktok_color" class="color-picker" value="#69C9D0">
-
-<label>Weboldal (csak felhasználónév, pl. 'szegedvolley.com'):</label>
-<input id="website_user" placeholder="pl. szegedvolley.com">
-<input type="color" id="website_color" class="color-picker" value="#000000">
-
-<label>Email:</label>
-<input id="email_user" placeholder="pl. info@ceg.hu">
-<input type="color" id="email_color" class="color-picker" value="#6c63ff">
-
-<label>Névjegy gomb felirat:</label>
-<input id="vcf_label" placeholder="Névjegy">
-<input type="color" id="vcf_color" class="color-picker" value="#ff9900">
-
-<hr>
-
-<!-- Kapcsolatok felirat -->
-<input id="contacts_label_text" placeholder="Kapcsolatok felirat">
-<input id="contacts_label_size" placeholder="Betűméret pl. 20px">
-<input type="color" id="contacts_label_color" class="color-picker" value="#ffffff">
-<input id="contacts_label_font" placeholder="Betűtípus pl. Arial">
-
-<hr>
-
-<button id="previewBtn" class="preview">Előnézet</button>
-<button id="genBtn">Generálás / Mentés</button>
-<div id="link" style="margin-top:15px; word-break: break-all;"></div>
-<button id="logoutBtn" class="logout">Kijelentkezés</button>
+<div id="link"></div>
 </div>
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-const supabase = createClient("https://lvscrtgxcyabjftbsdmm.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw");
+const supabase = createClient(
+    "https://lvscrtgxcyabjftbsdmm.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw" // cseréld a saját kulcsodra
+);
 
-function generateSlug(name){
-  const date = Date.now();
-  return name.replace(/\s+/g,'-').toLowerCase()+'-'+date;
+function slugify(text){ 
+  return text.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+Date.now(); 
 }
 
-async function uploadFile(file, folder){
-  if(!file) return null;
-  const path = folder+'/'+file.name;
-  const { error } = await supabase.storage.from('assets').upload(path, file, {upsert:true});
-  if(error){ console.error(error); return null; }
-  return supabase.storage.from('assets').getPublicUrl(path).data.publicUrl;
+async function uploadFile(bucket, file){
+    const { data, error } = await supabase.storage.from(bucket).upload(file.name, file, {upsert:true});
+    if(error) console.error("Storage error:", error);
+    return data?.path ? `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/${bucket}/${file.name}` : null;
 }
 
-function generateVcf(data){
-  return `BEGIN:VCARD
+document.getElementById('genBtn').onclick = async () => {
+    const name = slugify(document.getElementById('name').value || 'item');
+
+    const logo = document.getElementById('logo_file').files[0] ? await uploadFile('logos', document.getElementById('logo_file').files[0]) : null;
+    const bg = document.getElementById('bg_file').files[0] ? await uploadFile('backgrounds', document.getElementById('bg_file').files[0]) : null;
+
+    const vcf_content = `BEGIN:VCARD
 VERSION:3.0
-FN:${data.first_name} ${data.last_name}
-ORG:${data.company}
-ADR:${data.address}
-TEL:${data.phone}
-EMAIL:${data.email}
+N:${document.getElementById('last_name').value};${document.getElementById('first_name').value}
+ORG:${document.getElementById('company').value}
+TEL;TYPE=WORK,VOICE:${document.getElementById('phone').value}
+EMAIL:${document.getElementById('vcf_email').value}
+ADR:${document.getElementById('address').value}
 END:VCARD`;
-}
 
-document.getElementById("previewBtn").onclick = () => {
-  const previewData = {
-    slug: document.getElementById("slug").value || generateSlug("card"),
-    logo: null,
-    bg_image: null,
-    first_name: document.getElementById("first_name").value,
-    last_name: document.getElementById("last_name").value,
-    company: document.getElementById("company").value,
-    address: document.getElementById("address").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    facebook: document.getElementById("facebook_user").value,
-    facebook_color: document.getElementById("facebook_color").value,
-    instagram: document.getElementById("instagram_user").value,
-    instagram_color: document.getElementById("instagram_color").value,
-    tiktok: document.getElementById("tiktok_user").value,
-    tiktok_color: document.getElementById("tiktok_color").value,
-    website: document.getElementById("website_user").value,
-    website_color: document.getElementById("website_color").value,
-    vcf_label: document.getElementById("vcf_label").value,
-    vcf_color: document.getElementById("vcf_color").value,
-    email_color: document.getElementById("email_color").value,
-    contacts_label: {
-      text: document.getElementById("contacts_label_text").value,
-      size: document.getElementById("contacts_label_size").value,
-      color: document.getElementById("contacts_label_color").value,
-      font: document.getElementById("contacts_label_font").value
-    }
-  };
-  localStorage.setItem('previewData', JSON.stringify(previewData));
-  window.open('view.html?preview=true','_blank');
-};
+    const { data: profile, error } = await supabase.from('profiles').insert([{
+        name, 
+        facebook: document.getElementById('facebook').value ? 'https://facebook.com/' + document.getElementById('facebook').value : null,
+        facebook_color: document.getElementById('facebook_color').value,
+        instagram: document.getElementById('instagram').value ? 'https://instagram.com/' + document.getElementById('instagram').value : null,
+        instagram_color: document.getElementById('instagram_color').value,
+        tiktok: document.getElementById('tiktok').value ? 'https://tiktok.com/@' + document.getElementById('tiktok').value : null,
+        tiktok_color: document.getElementById('tiktok_color').value,
+        website: document.getElementById('website').value ? 'https://' + document.getElementById('website').value : null,
+        website_color: document.getElementById('website_color').value,
+        email: document.getElementById('email').value,
+        email_color: document.getElementById('email_color').value,
+        logo,
+        bg_image: bg,
+        contacts_label: document.getElementById('contacts_label').value,
+        contacts_color: document.getElementById('contacts_color').value,
+        contacts_font_size: document.getElementById('contacts_font_size').value,
+        vcf: btoa(vcf_content),
+    }]);
 
-document.getElementById("genBtn").onclick = async () => {
-  const slug = document.getElementById("slug").value || generateSlug("card");
-  const logoFile = document.getElementById("logo_file").files[0];
-  const bgFile = document.getElementById("bg_file").files[0];
+    if(error){ console.error(error); alert("Hiba: "+error.message); return; }
 
-  const logoUrl = await uploadFile(logoFile,'logos');
-  const bgUrl = await uploadFile(bgFile,'backgrounds');
-
-  const vcfContent = generateVcf({
-    first_name: document.getElementById("first_name").value,
-    last_name: document.getElementById("last_name").value,
-    company: document.getElementById("company").value,
-    address: document.getElementById("address").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value
-  });
-
-  const { data, error } = await supabase.from('profiles').insert([{
-    slug,
-    logo: logoUrl,
-    bg_image: bgUrl,
-    first_name: document.getElementById("first_name").value,
-    last_name: document.getElementById("last_name").value,
-    company: document.getElementById("company").value,
-    address: document.getElementById("address").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    facebook: document.getElementById("facebook_user").value,
-    facebook_color: document.getElementById("facebook_color").value,
-    instagram: document.getElementById("instagram_user").value,
-    instagram_color: document.getElementById("instagram_color").value,
-    tiktok: document.getElementById("tiktok_user").value,
-    tiktok_color: document.getElementById("tiktok_color").value,
-    website: document.getElementById("website_user").value,
-    website_color: document.getElementById("website_color").value,
-    vcf_label: document.getElementById("vcf_label").value,
-    vcf_color: document.getElementById("vcf_color").value,
-    email_color: document.getElementById("email_color").value,
-    contacts_label: {
-      text: document.getElementById("contacts_label_text").value,
-      size: document.getElementById("contacts_label_size").value,
-      color: document.getElementById("contacts_label_color").value,
-      font: document.getElementById("contacts_label_font").value
-    },
-    vcf_content: vcfContent
-  }]);
-
-  if(error){ console.error(error); alert("Hiba mentéskor!"); return;}
-  const link = `${window.location.origin}/view.html?slug=${slug}`;
-  document.getElementById("link").innerHTML = `<p>Generált link: <a href="${link}" target="_blank">${link}</a></p>`;
-};
-
-document.getElementById("logoutBtn").onclick = async () => {
-  await supabase.auth.signOut();
-  location.reload();
+    const link = `${window.location.origin}/view.html?slug=${name}`;
+    document.getElementById('link').innerHTML = `<p>Generált link:</p><input readonly value="${link}" style="width:100%;">`;
 };
 </script>
 </body>
