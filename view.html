@@ -138,10 +138,10 @@ async function fetchData(){
   if(!slug) return;
 
   try{
-    const res = await fetch(`https://YOUR_PROJECT.supabase.co/rest/v1/profiles?slug=eq.${slug}`, {
+    const res = await fetch(`https://lvscrtgxcyabjftbsdmm.supabase.co/rest/v1/profiles?slug=eq.${slug}`, {
       headers:{
-        apikey:'YOUR_ANON_KEY',
-        Authorization:'Bearer YOUR_ANON_KEY'
+        apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw',
+        Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw'
       }
     });
 
