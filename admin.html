@@ -103,7 +103,11 @@ function buildLinks(){
     facebook: val("facebook") ? "https://facebook.com/" + val("facebook") : null,
     instagram: val("instagram") ? "https://instagram.com/" + val("instagram") : null,
     tiktok: val("tiktok") ? "https://tiktok.com/@" + val("tiktok") : null,
-    website: val("website") || null,
+    website: val("website")
+  ? (val("website").startsWith("http")
+      ? val("website")
+      : "https://" + val("website"))
+  : null,
     email: val("email") || null
   };
 }
@@ -151,6 +155,7 @@ document.getElementById("genBtn").onclick = async () => {
 
   const payload = {
     slug,
+    name: val("name"), 
     ...buildLinks(),
 
     logo: logoUrl,
