@@ -155,15 +155,20 @@ async function fetchData(){
 
 /* VCF */
 function generateVCF(d){
-return `BEGIN:VCARD
-VERSION:3.0
-N:${d.last_name || ''};${d.first_name || ''}
-FN:${(d.first_name || '')} ${(d.last_name || '')}
-ORG:${d.company || ''}
-TEL:${d.phone || ''}
-EMAIL:${d.email || ''}
-ADR:;;${d.address || ''}
-END:VCARD`;
+  const lines = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `N:${d.last_name || ''};${d.first_name || ''}`,
+    `FN:${(d.first_name || '')} ${(d.last_name || '')}`,
+    d.company && `ORG:${d.company}`,
+    d.position && `TITLE:${d.position}`,
+    d.phone && `TEL:${d.phone}`,
+    d.email && `EMAIL:${d.email}`,
+    d.address && `ADR:;;${d.address}`,
+    "END:VCARD"
+  ].filter(Boolean);
+
+  return lines.join("\n");
 }
 
 function downloadVCF(){
