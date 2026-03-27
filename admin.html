@@ -24,6 +24,10 @@ button { padding:14px; font-size:16px; border:none; border-radius:10px; backgrou
 
 <input id="name" placeholder="Megjelenő név">
 
+<!-- 🔵 ÚJ -->
+<label>Kapcsolatok felirat</label>
+<input id="contacts_label" placeholder="Pl. Elérhetőségek">
+
 <h3>Képek</h3>
 
 <label>Logó</label>
@@ -32,7 +36,7 @@ button { padding:14px; font-size:16px; border:none; border-radius:10px; backgrou
 <label>Háttérkép</label>
 <input type="file" id="bg">
 
-<h3>Csatlakozz hozzánk!</h3>
+<h3>Kapcsolatok</h3>
 
 <input id="facebook" placeholder="Facebook felhasználónév">
 <div class="color-row">Facebook szín <input type="color" id="facebook_color" value="#1877f2"></div>
@@ -97,17 +101,17 @@ async function uploadFile(file, path){
   return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}/${fileName}`;
 }
 
-/* linkek */
+/* 🔥 LINK JAVÍTÁS */
 function buildLinks(){
   return {
     facebook: val("facebook") ? "https://facebook.com/" + val("facebook") : null,
     instagram: val("instagram") ? "https://instagram.com/" + val("instagram") : null,
     tiktok: val("tiktok") ? "https://tiktok.com/@" + val("tiktok") : null,
     website: val("website")
-  ? (val("website").startsWith("http")
-      ? val("website")
-      : "https://" + val("website"))
-  : null,
+      ? (val("website").startsWith("http")
+          ? val("website")
+          : "https://" + val("website"))
+      : null,
     email: val("email") || null
   };
 }
@@ -120,6 +124,9 @@ document.getElementById("previewBtn").onclick = async () => {
 
   const data = {
     ...buildLinks(),
+
+    contacts_label: val("contacts_label"), // ✅
+
     logo: logoFile ? URL.createObjectURL(logoFile) : null,
     bg_image: bgFile ? URL.createObjectURL(bgFile) : null,
 
@@ -155,7 +162,9 @@ document.getElementById("genBtn").onclick = async () => {
 
   const payload = {
     slug,
-    name: val("name"), 
+    name: val("name"),                 // ✅ FIX
+    contacts_label: val("contacts_label"), // ✅ ÚJ
+
     ...buildLinks(),
 
     logo: logoUrl,
