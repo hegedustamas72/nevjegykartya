@@ -116,7 +116,7 @@ body {
 
 <div class="wrapper">
   <img class="logo" src="">
-  <div class="title">Csatlakozz hozzánk!</div>
+  <div class="title" id="contactsTitle">Csatlakozz hozzánk</div>
   <div id="container" class="container"></div>
 </div>
 
@@ -177,6 +177,11 @@ function downloadVCF(){
 
 /* UI */
 function render(){
+
+  const title = document.getElementById("contactsTitle");
+  if(data.contacts_label && data.contacts_label.trim() !== ""){
+    title.innerText = data.contacts_label;
+  }
 
   /* háttér + logó */
   if(data.bg_image){
