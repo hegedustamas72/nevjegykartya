@@ -88,7 +88,12 @@ function slugify(text){
 async function uploadFile(file, path){
   if(!file) return null;
 
-  const fileName = Date.now() + "_" + file.name;
+  const cleanName = file.name
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "") // ékezetek eltávolítása
+  .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // minden más tiltott karakter →
+
+const fileName = Date.now() + "_" + cleanName;
 
   const { error } = await supabase.storage
     .from("assets")
