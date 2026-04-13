@@ -148,7 +148,7 @@ async function fetchData(){
   }
 }
 
-/* 🆕 BASE64 */
+/* BASE64 konvertálás */
 async function imageToBase64(url) {
   const res = await fetch(url);
   const blob = await res.blob();
@@ -162,7 +162,17 @@ async function imageToBase64(url) {
   });
 }
 
-/* 🔥 VCF (FRISSÍTETT) */
+/* 🔥 VCF sor tördelés */
+function foldLine(line, max = 75){
+  let result = "";
+  while(line.length > max){
+    result += line.substring(0, max) + "\n ";
+    line = line.substring(max);
+  }
+  return result + line;
+}
+
+/* 🔥 VCF generálás (FIXED) */
 async function generateVCF(d){
 
   let photoLine = "";
@@ -170,7 +180,7 @@ async function generateVCF(d){
   if(d.photo){
     try{
       const base64 = await imageToBase64(d.photo);
-      photoLine = `PHOTO;ENCODING=b;TYPE=JPEG:${base64}`;
+      photoLine = foldLine(`PHOTO;ENCODING=BASE64;TYPE=JPEG:${base64}`);
     }catch(e){
       console.error("Kép hiba", e);
     }
@@ -193,7 +203,7 @@ async function generateVCF(d){
   return lines.join("\n");
 }
 
-/* 🔥 LETÖLTÉS (ASYNC!) */
+/* 🔥 LETÖLTÉS */
 async function downloadVCF(){
   const blob = new Blob([await generateVCF(data)], {type:'text/vcard'});
   const url = URL.createObjectURL(blob);
