@@ -25,6 +25,7 @@ body {
   text-align:center;
 }
 
+/* háttér */
 .background {
   position:fixed;
   top:0;
@@ -36,6 +37,7 @@ body {
   z-index:-1;
 }
 
+/* tartalom */
 .wrapper {
   display:flex;
   flex-direction:column;
@@ -58,17 +60,20 @@ body {
   text-shadow:2px 2px 6px rgba(0,0,0,0.6);
 }
 
+/* gombok */
 .container {
   width:100%;
   max-width:420px;
 }
 
+/* 1 oszlop */
 .single-col {
   display:flex;
   flex-direction:column;
   gap:14px;
 }
 
+/* 2 oszlop */
 .grid {
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -148,6 +153,33 @@ async function fetchData(){
   }
 }
 
+/* VCF */
+function generateVCF(d){
+  const lines = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `N:${d.last_name || ''};${d.first_name || ''}`,
+    `FN:${(d.first_name || '')} ${(d.last_name || '')}`,
+    d.company && `ORG:${d.company}`,
+    d.position && `TITLE:${d.position}`,
+    d.phone && `TEL:${d.phone}`,
+    d.email && `EMAIL:${d.email}`,
+    d.address && `ADR:;;${d.address}`,
+    "END:VCARD"
+  ].filter(Boolean);
+
+  return lines.join("\n");
+}
+
+function downloadVCF(){
+  const blob = new Blob([generateVCF(data)], {type:'text/vcard'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "contact.vcf";
+  a.click();
+}
+
 /* UI */
 function render(){
 
@@ -156,6 +188,7 @@ function render(){
     title.innerText = data.contacts_label;
   }
 
+  /* háttér + logó */
   if(data.bg_image){
     document.querySelector('.background').style.backgroundImage = `url(${data.bg_image})`;
   }
@@ -164,6 +197,7 @@ function render(){
     document.querySelector('.logo').src = data.logo;
   }
 
+  /* sorrend fix */
   const allButtons = [
     data.facebook && {label:"Facebook", icon:"fab fa-facebook-f", url:data.facebook, color:data.facebook_color},
     data.instagram && {label:"Instagram", icon:"fab fa-instagram", url:data.instagram, color:data.instagram_color},
@@ -176,6 +210,7 @@ function render(){
   const container = document.getElementById("container");
   container.innerHTML = "";
 
+  /* szélesség számítás */
   const maxLen = Math.max(6, ...allButtons.map(b => b.label.length));
 
   function createBtn(b){
@@ -196,18 +231,24 @@ function render(){
     return a;
   }
 
+  /* layout */
   if(allButtons.length <= 3){
     const wrap = document.createElement("div");
     wrap.className = "single-col";
+
     allButtons.forEach(b => wrap.appendChild(createBtn(b)));
     container.appendChild(wrap);
+
   } else {
+
     const grid = document.createElement("div");
     grid.className = "grid";
 
     const isOdd = allButtons.length % 2 === 1;
 
     allButtons.forEach((b, i) => {
+
+      /* 🔥 5. gomb középen */
       if(isOdd && i === allButtons.length - 1){
         const div = document.createElement("div");
         div.className = "bottom-center";
@@ -216,44 +257,11 @@ function render(){
       } else {
         grid.appendChild(createBtn(b));
       }
+
     });
 
     container.appendChild(grid);
   }
-}
-
-/* 🔥 VCF GENERÁLÁS – FIX KÉPPEL (URL ALAPON) */
-async function generateVCF(d){
-
-  const lines = [
-    "BEGIN:VCARD",
-    "VERSION:3.0",
-    `N:${d.last_name || ''};${d.first_name || ''}`,
-    `FN:${(d.first_name || '')} ${(d.last_name || '')}`,
-    d.company && `ORG:${d.company}`,
-    d.position && `TITLE:${d.position}`,
-    d.phone && `TEL:${d.phone}`,
-    d.email && `EMAIL:${d.email}`,
-    d.address && `ADR:;;${d.address}`,
-
-    // 🔥 EZ A STABIL MEGOLDÁS (iPhone kompatibilis)
-    d.photo && `PHOTO;VALUE=URI:${d.photo}`,
-
-    "END:VCARD"
-  ].filter(Boolean);
-
-  return lines.join("\r\n");
-}
-
-/* LETÖLTÉS */
-async function downloadVCF(){
-  const blob = new Blob([await generateVCF(data)], {type:'text/vcard'});
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "contact.vcf";
-  a.click();
 }
 </script>
 
