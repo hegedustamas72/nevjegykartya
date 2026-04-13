@@ -24,11 +24,13 @@ button { padding:14px; font-size:16px; border:none; border-radius:10px; backgrou
 
 <input id="name" placeholder="Megjelenő név">
 
-<!-- 🔵 ÚJ -->
 <label>Kapcsolatok felirat</label>
 <input id="contacts_label" placeholder="Pl. Elérhetőségek">
 
 <h3>Képek</h3>
+
+<label>Profilkép</label>
+<input type="file" id="photo"> <!-- ✅ ÚJ -->
 
 <label>Logó</label>
 <input type="file" id="logo">
@@ -59,7 +61,7 @@ button { padding:14px; font-size:16px; border:none; border-radius:10px; backgrou
 <input id="lastName" placeholder="Vezetéknév">
 <input id="firstName" placeholder="Keresztnév">
 <input id="company" placeholder="Cég">
-<input id="position" placeholder="Beosztás">
+<input id="position" placeholder="Beosztás"> <!-- ✅ ÚJ -->
 <input id="phone" placeholder="Telefon">
 <input id="address" placeholder="Cím">
 
@@ -84,16 +86,46 @@ function slugify(text){
   return (text || "user") + "-" + Date.now();
 }
 
+/* 🔥 KÉP ÁTMÉRETEZÉS */
+async function resizeImage(file, maxSize = 300) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => img.src = e.target.result;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let w = img.width, h = img.height;
+
+      if (w > h && w > maxSize) {
+        h *= maxSize / w;
+        w = maxSize;
+      } else if (h > maxSize) {
+        w *= maxSize / h;
+        h = maxSize;
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+      canvas.toBlob(
+        (blob) => resolve(new File([blob], "resized.jpg", { type: "image/jpeg" })),
+        "image/jpeg",
+        0.8
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
 /* 🔥 FILE UPLOAD */
 async function uploadFile(file, path){
   if(!file) return null;
 
-  const cleanName = file.name
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "") // ékezetek eltávolítása
-  .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // minden más tiltott karakter →
-
-const fileName = Date.now() + "_" + cleanName;
+  const fileName = Date.now() + "_" + file.name;
 
   const { error } = await supabase.storage
     .from("assets")
@@ -127,14 +159,16 @@ document.getElementById("previewBtn").onclick = async () => {
 
   const logoFile = document.getElementById("logo").files[0];
   const bgFile = document.getElementById("bg").files[0];
+  const photoFile = document.getElementById("photo").files[0]; // ✅
 
   const data = {
     ...buildLinks(),
 
-    contacts_label: val("contacts_label"), // ✅
+    contacts_label: val("contacts_label"),
 
     logo: logoFile ? URL.createObjectURL(logoFile) : null,
     bg_image: bgFile ? URL.createObjectURL(bgFile) : null,
+    photo: photoFile ? URL.createObjectURL(photoFile) : null, // ✅
 
     facebook_color: val("facebook_color"),
     instagram_color: val("instagram_color"),
@@ -146,7 +180,7 @@ document.getElementById("previewBtn").onclick = async () => {
     first_name: val("firstName"),
     last_name: val("lastName"),
     company: val("company"),
-    position: val("position"),
+    position: val("position"), // ✅
     phone: val("phone"),
     email: val("email"),
     address: val("address")
@@ -161,21 +195,28 @@ document.getElementById("genBtn").onclick = async () => {
 
   const slug = slugify(val("name"));
 
-  const logoFile = document.getElementById("logo").files[0];
-  const bgFile = document.getElementById("bg").files[0];
+  const logoRaw = document.getElementById("logo").files[0];
+  const bgRaw = document.getElementById("bg").files[0];
+  const photoRaw = document.getElementById("photo").files[0];
+
+  const logoFile = logoRaw ? await resizeImage(logoRaw, 400) : null;
+  const bgFile = bgRaw;
+  const photoFile = photoRaw ? await resizeImage(photoRaw, 300) : null;
 
   const logoUrl = await uploadFile(logoFile, "logos");
   const bgUrl = await uploadFile(bgFile, "backgrounds");
+  const photoUrl = await uploadFile(photoFile, "photos");
 
   const payload = {
     slug,
-    name: val("name"),                 // ✅ FIX
-    contacts_label: val("contacts_label"), // ✅ ÚJ
+    name: val("name"),
+    contacts_label: val("contacts_label"),
 
     ...buildLinks(),
 
     logo: logoUrl,
     bg_image: bgUrl,
+    photo: photoUrl,
 
     facebook_color: val("facebook_color"),
     instagram_color: val("instagram_color"),
