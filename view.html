@@ -148,7 +148,7 @@ async function fetchData(){
   }
 }
 
-/* BASE64 konvertálás */
+/* BASE64 */
 async function imageToBase64(url) {
   const res = await fetch(url);
   const blob = await res.blob();
@@ -162,17 +162,17 @@ async function imageToBase64(url) {
   });
 }
 
-/* 🔥 VCF sor tördelés */
+/* VCF sor tördelés (CRLF!) */
 function foldLine(line, max = 75){
   let result = "";
   while(line.length > max){
-    result += line.substring(0, max) + "\n ";
+    result += line.substring(0, max) + "\r\n ";
     line = line.substring(max);
   }
   return result + line;
 }
 
-/* 🔥 VCF generálás (FIXED) */
+/* VCF generálás (FINAL FIX) */
 async function generateVCF(d){
 
   let photoLine = "";
@@ -180,7 +180,10 @@ async function generateVCF(d){
   if(d.photo){
     try{
       const base64 = await imageToBase64(d.photo);
-      photoLine = foldLine(`PHOTO;ENCODING=BASE64;TYPE=JPEG:${base64}`);
+
+      // 🔥 iPhone kompatibilis megoldás
+      photoLine = foldLine(`PHOTO:data:image/jpeg;base64,${base64}`);
+
     }catch(e){
       console.error("Kép hiba", e);
     }
@@ -200,10 +203,10 @@ async function generateVCF(d){
     "END:VCARD"
   ].filter(Boolean);
 
-  return lines.join("\n");
+  return lines.join("\r\n"); // 🔥 CRLF kötelező
 }
 
-/* 🔥 LETÖLTÉS */
+/* LETÖLTÉS */
 async function downloadVCF(){
   const blob = new Blob([await generateVCF(data)], {type:'text/vcard'});
   const url = URL.createObjectURL(blob);
