@@ -148,74 +148,6 @@ async function fetchData(){
   }
 }
 
-/* BASE64 */
-async function imageToBase64(url) {
-  const res = await fetch(url);
-  const blob = await res.blob();
-
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      resolve(reader.result.split(',')[1]);
-    };
-    reader.readAsDataURL(blob);
-  });
-}
-
-/* VCF sor tördelés (CRLF!) */
-function foldLine(line, max = 75){
-  let result = "";
-  while(line.length > max){
-    result += line.substring(0, max) + "\r\n ";
-    line = line.substring(max);
-  }
-  return result + line;
-}
-
-/* VCF generálás (FINAL FIX) */
-async function generateVCF(d){
-
-  let photoLine = "";
-
-  if(d.photo){
-    try{
-      const base64 = await imageToBase64(d.photo);
-
-      // 🔥 iPhone kompatibilis megoldás
-      photoLine = foldLine(`PHOTO:data:image/jpeg;base64,${base64}`);
-
-    }catch(e){
-      console.error("Kép hiba", e);
-    }
-  }
-
-  const lines = [
-    "BEGIN:VCARD",
-    "VERSION:3.0",
-    `N:${d.last_name || ''};${d.first_name || ''}`,
-    `FN:${(d.first_name || '')} ${(d.last_name || '')}`,
-    d.company && `ORG:${d.company}`,
-    d.position && `TITLE:${d.position}`,
-    d.phone && `TEL:${d.phone}`,
-    d.email && `EMAIL:${d.email}`,
-    d.address && `ADR:;;${d.address}`,
-    photoLine,
-    "END:VCARD"
-  ].filter(Boolean);
-
-  return lines.join("\r\n"); // 🔥 CRLF kötelező
-}
-
-/* LETÖLTÉS */
-async function downloadVCF(){
-  const blob = new Blob([await generateVCF(data)], {type:'text/vcard'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "contact.vcf";
-  a.click();
-}
-
 /* UI */
 function render(){
 
@@ -288,6 +220,40 @@ function render(){
 
     container.appendChild(grid);
   }
+}
+
+/* 🔥 VCF GENERÁLÁS – FIX KÉPPEL (URL ALAPON) */
+async function generateVCF(d){
+
+  const lines = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `N:${d.last_name || ''};${d.first_name || ''}`,
+    `FN:${(d.first_name || '')} ${(d.last_name || '')}`,
+    d.company && `ORG:${d.company}`,
+    d.position && `TITLE:${d.position}`,
+    d.phone && `TEL:${d.phone}`,
+    d.email && `EMAIL:${d.email}`,
+    d.address && `ADR:;;${d.address}`,
+
+    // 🔥 EZ A STABIL MEGOLDÁS (iPhone kompatibilis)
+    d.photo && `PHOTO;VALUE=URI:${d.photo}`,
+
+    "END:VCARD"
+  ].filter(Boolean);
+
+  return lines.join("\r\n");
+}
+
+/* LETÖLTÉS */
+async function downloadVCF(){
+  const blob = new Blob([await generateVCF(data)], {type:'text/vcard'});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "contact.vcf";
+  a.click();
 }
 </script>
 
