@@ -12,63 +12,15 @@ input { width: 90%; padding:10px; margin:6px 0; border-radius:8px; border:1px so
 label { display:block; margin-top:10px; font-weight:bold; }
 button { padding:14px; font-size:16px; border:none; border-radius:10px; background:#42a5f5; color:white; cursor:pointer; margin-top:10px; width:100%; }
 .copyBtn { background:#4caf50; }
+.logout { background:#ef5350; }
 .color-row { display:flex; align-items:center; justify-content:space-between; }
 .color-row input[type="color"] { width:60px; height:40px; border:none; }
 </style>
 </head>
 
 <body>
-<div class="card">
 
-<h2>Digitális névjegy</h2>
-
-<input id="name" placeholder="Megjelenő név">
-
-<!-- 🔵 ÚJ -->
-<label>Kapcsolatok felirat</label>
-<input id="contacts_label" placeholder="Pl. Elérhetőségek">
-
-<h3>Képek</h3>
-
-<label>Logó</label>
-<input type="file" id="logo">
-
-<label>Háttérkép</label>
-<input type="file" id="bg">
-
-<h3>Kapcsolatok</h3>
-
-<input id="facebook" placeholder="Facebook felhasználónév">
-<div class="color-row">Facebook szín <input type="color" id="facebook_color" value="#1877f2"></div>
-
-<input id="instagram" placeholder="Instagram felhasználónév">
-<div class="color-row">Instagram szín <input type="color" id="instagram_color" value="#e1306c"></div>
-
-<input id="tiktok" placeholder="TikTok felhasználónév">
-<div class="color-row">TikTok szín <input type="color" id="tiktok_color" value="#000000"></div>
-
-<input id="website" placeholder="Weboldal">
-<div class="color-row">Web szín <input type="color" id="website_color" value="#ff6600"></div>
-
-<input id="email" placeholder="Email">
-<div class="color-row">Email szín <input type="color" id="email_color" value="#4caf50"></div>
-
-<div class="color-row">Névjegy szín <input type="color" id="vcf_color" value="#9c27b0"></div>
-
-<h3>Névjegy (VCF)</h3>
-<input id="lastName" placeholder="Vezetéknév">
-<input id="firstName" placeholder="Keresztnév">
-<input id="company" placeholder="Cég">
-<input id="position" placeholder="Beosztás">
-<input id="phone" placeholder="Telefon">
-<input id="address" placeholder="Cím">
-
-<button id="previewBtn">Preview</button>
-<button id="genBtn">Link generálása</button>
-
-<div id="link"></div>
-
-</div>
+<div id="app">Betöltés...</div>
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
@@ -78,135 +30,140 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2c2NydGd4Y3lhYmpmdGJzZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzMxNDYsImV4cCI6MjA4OTg0OTE0Nn0.Mu22i0W7qfNtG3F9vHdik4cXLlgAyQwqpArrJfROABw"
 );
 
+const app = document.getElementById("app");
+
 function val(id){ return document.getElementById(id).value.trim(); }
+function slugify(text){ return (text || "user") + "-" + Date.now(); }
 
-function slugify(text){
-  return (text || "user") + "-" + Date.now();
-}
-
-/* 🔥 FILE UPLOAD */
-async function uploadFile(file, path){
-  if(!file) return null;
-
-  const cleanName = file.name
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "") // ékezetek eltávolítása
-  .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // minden más tiltott karakter →
-
-const fileName = Date.now() + "_" + cleanName;
-
-  const { error } = await supabase.storage
-    .from("assets")
-    .upload(path + "/" + fileName, file);
-
-  if(error){
-    alert(error.message);
-    return null;
-  }
-
-  return `https://lvscrtgxcyabjftbsdmm.supabase.co/storage/v1/object/public/assets/${path}/${fileName}`;
-}
-
-/* 🔥 LINK JAVÍTÁS */
 function buildLinks(){
   return {
     facebook: val("facebook") ? "https://facebook.com/" + val("facebook") : null,
     instagram: val("instagram") ? "https://instagram.com/" + val("instagram") : null,
     tiktok: val("tiktok") ? "https://tiktok.com/@" + val("tiktok") : null,
     website: val("website")
-      ? (val("website").startsWith("http")
-          ? val("website")
-          : "https://" + val("website"))
+      ? (val("website").startsWith("http") ? val("website") : "https://" + val("website"))
       : null,
     email: val("email") || null
   };
 }
 
-/* PREVIEW */
-document.getElementById("previewBtn").onclick = async () => {
+async function init(){
 
-  const logoFile = document.getElementById("logo").files[0];
-  const bgFile = document.getElementById("bg").files[0];
+  const { data } = await supabase.auth.getSession();
+  let session = data.session;
 
-  const data = {
-    ...buildLinks(),
+  // 🔐 LOGIN
+  if (!session) {
+    app.innerHTML = `
+      <div class="card">
+        <h2>Bejelentkezés</h2>
+        <input id="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Jelszó">
+        <button id="loginBtn">Belépés</button>
+      </div>
+    `;
 
-    contacts_label: val("contacts_label"), // ✅
+    document.getElementById("loginBtn").onclick = async () => {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
+      });
 
-    logo: logoFile ? URL.createObjectURL(logoFile) : null,
-    bg_image: bgFile ? URL.createObjectURL(bgFile) : null,
+      if (error) alert(error.message);
+      else location.reload();
+    };
 
-    facebook_color: val("facebook_color"),
-    instagram_color: val("instagram_color"),
-    tiktok_color: val("tiktok_color"),
-    website_color: val("website_color"),
-    email_color: val("email_color"),
-    vcf_color: val("vcf_color"),
-
-    first_name: val("firstName"),
-    last_name: val("lastName"),
-    company: val("company"),
-    position: val("position"),
-    phone: val("phone"),
-    email: val("email"),
-    address: val("address")
-  };
-
-  localStorage.setItem("previewData", JSON.stringify(data));
-  window.open("view.html?preview=true", "_blank");
-};
-
-/* GENERÁLÁS */
-document.getElementById("genBtn").onclick = async () => {
-
-  const slug = slugify(val("name"));
-
-  const logoFile = document.getElementById("logo").files[0];
-  const bgFile = document.getElementById("bg").files[0];
-
-  const logoUrl = await uploadFile(logoFile, "logos");
-  const bgUrl = await uploadFile(bgFile, "backgrounds");
-
-  const payload = {
-    slug,
-    name: val("name"),                 // ✅ FIX
-    contacts_label: val("contacts_label"), // ✅ ÚJ
-
-    ...buildLinks(),
-
-    logo: logoUrl,
-    bg_image: bgUrl,
-
-    facebook_color: val("facebook_color"),
-    instagram_color: val("instagram_color"),
-    tiktok_color: val("tiktok_color"),
-    website_color: val("website_color"),
-    email_color: val("email_color"),
-    vcf_color: val("vcf_color"),
-
-    first_name: val("firstName"),
-    last_name: val("lastName"),
-    company: val("company"),
-    position: val("position"),
-    phone: val("phone"),
-    email: val("email"),
-    address: val("address")
-  };
-
-  const { error } = await supabase.from("profiles").insert(payload);
-
-  if(error){
-    alert(error.message);
     return;
   }
 
-  const url = location.origin + "/view.html?slug=" + slug;
+  // ✅ ADMIN FELÜLET
+  app.innerHTML = `
+  <div class="card">
 
-  document.getElementById("link").innerHTML = `
-    <input value="${url}" style="width:100%">
-    <button class="copyBtn" onclick="navigator.clipboard.writeText('${url}')">Másolás</button>
+  <h2>Digitális névjegy</h2>
+
+  <input id="name" placeholder="Megjelenő név">
+
+  <label>Kapcsolatok felirat</label>
+  <input id="contacts_label" placeholder="Pl. Elérhetőségek">
+
+  <h3>Képek</h3>
+  <label>Logó</label>
+  <input type="file" id="logo">
+  <label>Háttérkép</label>
+  <input type="file" id="bg">
+
+  <h3>Kapcsolatok</h3>
+
+  <input id="facebook" placeholder="Facebook">
+  <div class="color-row">Facebook <input type="color" id="facebook_color" value="#1877f2"></div>
+
+  <input id="instagram" placeholder="Instagram">
+  <div class="color-row">Instagram <input type="color" id="instagram_color" value="#e1306c"></div>
+
+  <input id="tiktok" placeholder="TikTok">
+  <div class="color-row">TikTok <input type="color" id="tiktok_color" value="#000000"></div>
+
+  <input id="website" placeholder="Weboldal">
+  <div class="color-row">Web <input type="color" id="website_color" value="#ff6600"></div>
+
+  <input id="email" placeholder="Email">
+  <div class="color-row">Email <input type="color" id="email_color" value="#4caf50"></div>
+
+  <div class="color-row">Névjegy <input type="color" id="vcf_color" value="#9c27b0"></div>
+
+  <h3>Névjegy</h3>
+  <input id="lastName" placeholder="Vezetéknév">
+  <input id="firstName" placeholder="Keresztnév">
+  <input id="company" placeholder="Cég">
+  <input id="position" placeholder="Beosztás">
+  <input id="phone" placeholder="Telefon">
+  <input id="address" placeholder="Cím">
+
+  <button id="genBtn">Link generálása</button>
+
+  <div id="link"></div>
+
+  <button id="logoutBtn" class="logout">Kijelentkezés</button>
+
+  </div>
   `;
-};
+
+  document.getElementById("logoutBtn").onclick = async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  };
+
+  // 🔥 GENERÁLÁS
+  document.getElementById("genBtn").onclick = async () => {
+
+    const payload = {
+      slug: slugify(val("name")),
+      name: val("name"),
+      contacts_label: val("contacts_label"),
+      ...buildLinks(),
+      first_name: val("firstName"),
+      last_name: val("lastName"),
+      company: val("company"),
+      position: val("position"),
+      phone: val("phone"),
+      email: val("email"),
+      address: val("address")
+    };
+
+    const { error } = await supabase.from("profiles").insert(payload);
+
+    if(error){
+      alert(error.message);
+      return;
+    }
+
+    alert("Siker!");
+  };
+}
+
+init();
 </script>
+
 </body>
 </html>
